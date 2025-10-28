@@ -1,0 +1,15 @@
+# Dependencies
+node_modules/
+
+# Supabase
+.supabase/
+
+# Environment variables
+.env
+.env.local
+
+# Logs
+*.log
+
+# Deno
+.deno/
