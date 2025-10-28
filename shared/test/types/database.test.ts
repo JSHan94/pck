@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { Board, Cell, GameSession, RevealedCell } from '../../src/types/database.js';
+import type { Board, Cell, GameSession, RevealedCell, PrizeClaim } from '../../src/types/database.js';
 
 describe('Database Types', () => {
   describe('Cell', () => {
@@ -277,6 +277,116 @@ describe('Database Types', () => {
       };
 
       expect(typeof revealedCell.tier).toBe('number');
+    });
+  });
+
+  describe('PrizeClaim', () => {
+    it('should accept valid PrizeClaim object', () => {
+      const prizeClaim: PrizeClaim = {
+        prizeId: 'prize-uuid-123',
+        userAddress: '0x1234567890123456789012345678901234567890',
+        tier: 3,
+        isClaimed: false,
+        sessionId: 42,
+        cellId: 15,
+      };
+
+      expect(prizeClaim.prizeId).toBe('prize-uuid-123');
+      expect(prizeClaim.userAddress).toBe('0x1234567890123456789012345678901234567890');
+      expect(prizeClaim.tier).toBe(3);
+      expect(prizeClaim.isClaimed).toBe(false);
+      expect(prizeClaim.sessionId).toBe(42);
+      expect(prizeClaim.cellId).toBe(15);
+    });
+
+    it('should have prizeId as string', () => {
+      const prizeClaim: PrizeClaim = {
+        prizeId: 'test-prize-id',
+        userAddress: '0xabc',
+        tier: 1,
+        isClaimed: false,
+        sessionId: 1,
+        cellId: 0,
+      };
+
+      expect(typeof prizeClaim.prizeId).toBe('string');
+    });
+
+    it('should have userAddress as string', () => {
+      const prizeClaim: PrizeClaim = {
+        prizeId: 'prize-1',
+        userAddress: '0x9876543210987654321098765432109876543210',
+        tier: 2,
+        isClaimed: true,
+        sessionId: 5,
+        cellId: 10,
+      };
+
+      expect(typeof prizeClaim.userAddress).toBe('string');
+    });
+
+    it('should have tier as number', () => {
+      const prizeClaim: PrizeClaim = {
+        prizeId: 'prize-2',
+        userAddress: '0xdef',
+        tier: 6,
+        isClaimed: false,
+        sessionId: 1,
+        cellId: 48,
+      };
+
+      expect(typeof prizeClaim.tier).toBe('number');
+    });
+
+    it('should have isClaimed as boolean', () => {
+      const claimedPrize: PrizeClaim = {
+        prizeId: 'prize-3',
+        userAddress: '0xabc',
+        tier: 4,
+        isClaimed: true,
+        sessionId: 10,
+        cellId: 20,
+      };
+
+      const unclaimedPrize: PrizeClaim = {
+        prizeId: 'prize-4',
+        userAddress: '0xdef',
+        tier: 5,
+        isClaimed: false,
+        sessionId: 11,
+        cellId: 25,
+      };
+
+      expect(typeof claimedPrize.isClaimed).toBe('boolean');
+      expect(claimedPrize.isClaimed).toBe(true);
+      expect(typeof unclaimedPrize.isClaimed).toBe('boolean');
+      expect(unclaimedPrize.isClaimed).toBe(false);
+    });
+
+    it('should have sessionId as number', () => {
+      const prizeClaim: PrizeClaim = {
+        prizeId: 'prize-5',
+        userAddress: '0x123',
+        tier: 3,
+        isClaimed: false,
+        sessionId: 999,
+        cellId: 30,
+      };
+
+      expect(typeof prizeClaim.sessionId).toBe('number');
+    });
+
+    it('should have cellId as number', () => {
+      const prizeClaim: PrizeClaim = {
+        prizeId: 'prize-6',
+        userAddress: '0x456',
+        tier: 2,
+        isClaimed: true,
+        sessionId: 50,
+        cellId: 47,
+      };
+
+      expect(typeof prizeClaim.cellId).toBe('number');
     });
   });
 });

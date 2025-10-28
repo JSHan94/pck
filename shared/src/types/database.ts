@@ -27,3 +27,12 @@ export interface RevealedCell {
   cellId: number;
   tier: number;
 }
+
+export interface PrizeClaim {
+  prizeId: string;
+  userAddress: string;
+  tier: number;
+  isClaimed: boolean;
+  sessionId: number;
+  cellId: number;
+}
