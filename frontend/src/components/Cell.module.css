@@ -1,0 +1,89 @@
+/* Base cell styles */
+.cell {
+  width: 4rem; /* 64px */
+  height: 4rem; /* 64px */
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.125rem;
+  transition: all 0.3s;
+  cursor: pointer;
+}
+
+/* Revealed cell states */
+.revealed {
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+.tier1 {
+  background-color: rgb(147 51 234); /* purple-600 */
+  color: white;
+}
+
+.tier2 {
+  background-color: rgb(37 99 235); /* blue-600 */
+  color: white;
+}
+
+.tier3 {
+  background-color: rgb(22 163 74); /* green-600 */
+  color: white;
+}
+
+.tier4 {
+  background-color: rgb(234 179 8); /* yellow-500 */
+  color: white;
+}
+
+.tier5 {
+  background-color: rgb(249 115 22); /* orange-500 */
+  color: white;
+}
+
+.tier6 {
+  background-color: rgb(156 163 175); /* gray-400 */
+  color: white;
+}
+
+/* Unrevealed cell states */
+.unrevealed {
+  background-color: white;
+  border: 2px solid rgb(209 213 219); /* gray-300 */
+}
+
+.unrevealed:hover:not(:disabled) {
+  border-color: rgb(96 165 250); /* blue-400 */
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+.unrevealed:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.unrevealed:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Hinted state */
+.hinted {
+  border-color: rgb(250 204 21); /* yellow-400 */
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Cell number text */
+.cellNumber {
+  color: rgb(107 114 128); /* gray-500 */
+}

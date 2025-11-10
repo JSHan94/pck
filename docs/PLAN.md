@@ -129,30 +129,30 @@ import type { StartSessionResponse } from '@pck/shared';
   - [x] `ClaimProofResponse`: `{ merkleProof: string[], prizeId: string, prizeTier: number, cellId: number, salt: string, sessionId: number }`
   - [x] `VerifyReceiptRequest`: `{ txHash: string, sessionId?: number, prizeId?: string }`
   - [x] `VerifyReceiptResponse`: `{ success: boolean, isActive?: boolean, isClaimed?: boolean }`
-- [ ] **DB 스키마 타입** (`src/types/database.ts`):
+- [x] **DB 스키마 타입** (`src/types/database.ts`):
   - [x] `Board`: `{ boardId: string, prizeLayout: Cell[], merkleRoot: string, isAssigned: boolean }`
   - [x] `Cell`: `{ cellId: number, tier: number, salt: string }`
   - [x] `GameSession`: `{ sessionId: number, userAddress: string, boardId: string, pullCount: number, isActive: boolean }`
-  - [ ] `RevealedCell`: `{ id: number, sessionId: number, cellId: number, tier: number }`
-  - [ ] `PrizeClaim`: `{ prizeId: string, userAddress: string, tier: number, isClaimed: boolean, sessionId: number, cellId: number }`
+  - [x] `RevealedCell`: `{ id: number, sessionId: number, cellId: number, tier: number }`
+  - [x] `PrizeClaim`: `{ prizeId: string, userAddress: string, tier: number, isClaimed: boolean, sessionId: number, cellId: number }`
 
 ### 마일스톤 S3: 공유 상수 및 유틸리티
-- [ ] **상수** (`src/constants/index.ts`):
-  - [ ] `TIER_DISTRIBUTION`: `{ 1: 1, 2: 2, 3: 6, 4: 10, 5: 18, 6: 12 }`
-  - [ ] `GRID_SIZE`: `7`
-  - [ ] `TOTAL_CELLS`: `49`
-  - [ ] `HINT_INTERVAL`: `3` (3회 뽑기마다 힌트)
-- [ ] **Merkle 유틸리티** (`src/utils/merkle.ts`):
-  - [ ] `hashLeaf(cellId: number, tier: number, salt: string): string` *(viem solidityPackedKeccak256)*
-  - [ ] 컨트랙트 C3의 해시 로직과 1:1 매칭 보장
-- [ ] **검증 유틸리티** (`src/utils/validation.ts`):
-  - [ ] `isValidTier(tier: number): boolean`
-  - [ ] `isValidCellId(cellId: number): boolean`
+- [x] **상수** (`src/constants/index.ts`):
+  - [x] `TIER_DISTRIBUTION`: `{ 1: 1, 2: 2, 3: 6, 4: 10, 5: 18, 6: 12 }`
+  - [x] `GRID_SIZE`: `7`
+  - [x] `TOTAL_CELLS`: `49`
+  - [x] `HINT_INTERVAL`: `3` (3회 뽑기마다 힌트)
+- [x] **Merkle 유틸리티** (`src/utils/merkle.ts`):
+  - [x] `hashLeaf(cellId: number, tier: number, salt: string): string` *(viem solidityPackedKeccak256)*
+  - [x] 컨트랙트 C3의 해시 로직과 1:1 매칭 보장
+- [x] **검증 유틸리티** (`src/utils/validation.ts`):
+  - [x] `isValidTier(tier: number): boolean`
+  - [x] `isValidCellId(cellId: number): boolean`
 
 ### 마일스톤 S4: 빌드 및 배포 설정
-- [ ] TypeScript 컴파일 스크립트 추가: `"build": "tsc"`
-- [ ] 타입 선언 파일(`.d.ts`) 생성 확인
-- [ ] Frontend/Backend에서 `@pck/shared` 의존성 추가:
+- [x] TypeScript 컴파일 스크립트 추가: `"build": "tsc"`
+- [x] 타입 선언 파일(`.d.ts`) 생성 확인
+- [x] Frontend/Backend에서 `@pck/shared` 의존성 추가:
   ```json
   {
     "dependencies": {
@@ -160,7 +160,8 @@ import type { StartSessionResponse } from '@pck/shared';
     }
   }
   ```
-- [ ] 임포트 테스트: Frontend와 Backend에서 타입 임포트 확인
+  *(Frontend 완료. Backend는 B1 마일스톤에서 프로젝트 생성 시 추가 예정)*
+- [x] 임포트 테스트: Frontend와 Backend에서 타입 임포트 확인
 
 ---
 
@@ -169,49 +170,49 @@ import type { StartSessionResponse } from '@pck/shared';
 **목표**: 직관적인 사용자 인터페이스 구축. 지갑 연결, 오프체인 게임 플레이, 온체인 티켓 구매(Root 커밋) 및 상품 클레임(Proof 검증) 기능 제공.
 
 ### 마일스톤 F1: 기본 설정 및 지갑 연결 (Privy)
-- [ ] `frontend/` 디렉토리에 Vite 기반 React 프로젝트 생성 *(TypeScript 권장)*
-- [ ] `@pck/shared` 패키지 의존성 추가
-- [ ] TailwindCSS 설정
-- [ ] viem 라이브러리 설치
-- [ ] keccak256, merkletreejs 설치 *(선택: 프루프 클라이언트 검증용)*
-- [ ] Privy React SDK `@privy-io/react-auth` 설치
-- [ ] `PrivyProvider` 설정 *(App ID, 타겟 체인 지정)*
-- [ ] 타겟 체인 ID `.env` 환경 변수로 분리
-- [ ] ‘로그인/로그아웃’ 버튼 UI 구현 *(Privy 훅 `login`, `logout`)*
-- [ ] 사용자의 지갑 주소(`user.wallet.address`) 및 잔액 표시 UI 구현
+- [x] `frontend/` 디렉토리에 Vite 기반 React 프로젝트 생성 *(TypeScript 권장)*
+- [x] `@pck/shared` 패키지 의존성 추가
+- [x] TailwindCSS 설정
+- [x] viem 라이브러리 설치
+- [x] keccak256, merkletreejs 설치 *(선택: 프루프 클라이언트 검증용)*
+- [x] Privy React SDK `@privy-io/react-auth` 설치
+- [x] `PrivyProvider` 설정 *(App ID, 타겟 체인 지정)*
+- [x] 타겟 체인 ID `.env` 환경 변수로 분리
+- [x] ‘로그인/로그아웃’ 버튼 UI 구현 *(Privy 훅 `login`, `logout`)*
+- [x] 사용자의 지갑 주소(`user.wallet.address`) 및 잔액 표시 UI 구현
 
 ### 마일스톤 F2: 게임 보드 UI 렌더링 (Mock Data)
-- [ ] `GameBoard.tsx` 컴포넌트 생성 *(CSS Grid 7×7)*
-- [ ] `Cell.tsx` 컴포넌트 생성 *(Props: `cellId`, `isRevealed`, `tier`, `isHinted`)*
-- [ ] `Cell`: 미공개 상태 UI *(바둑알 모양 + 번호, 호버 효과)*
-- [ ] `Cell`: 공개 상태 UI *(티어 표시, 티어별 색상)*
-- [ ] `Cell`: 힌트 상태 UI *(빛나는 테두리)*
-- [ ] 백엔드(B3)의 `createBoard` 로직을 JS/TS로 포팅하여 Mock 보드 생성
-- [ ] `GameBoard`에서 포팅된 `createBoard`로 49개 셀 렌더링 테스트
+- [x] `GameBoard.tsx` 컴포넌트 생성 *(CSS Grid 7×7)*
+- [x] `Cell.tsx` 컴포넌트 생성 *(Props: `cellId`, `isRevealed`, `tier`, `isHinted`)*
+- [x] `Cell`: 미공개 상태 UI *(바둑알 모양 + 번호, 호버 효과)*
+- [x] `Cell`: 공개 상태 UI *(티어 표시, 티어별 색상)*
+- [x] `Cell`: 힌트 상태 UI *(빛나는 테두리)*
+- [x] 백엔드(B3)의 `createBoard` 로직을 JS/TS로 포팅하여 Mock 보드 생성
+- [x] `GameBoard`에서 포팅된 `createBoard`로 49개 셀 렌더링 테스트
 
 ### 마일스톤 F3: 백엔드 연동 (Mock API)
-- [ ] `react-query` 설정
-- [ ] MSW(Mock Service Worker) 설치
-- [ ] Mock: `GET /api/game/start-session` → `{ merkleRoot: "0x...", sessionId: 1 }`
-- [ ] Mock: `GET /api/game/board` → `{ boardId: 1, revealedCells: [{ cellId: 5, tier: 6 }] }`
-- [ ] Mock: `GET /api/game/user-state/:address` → `{ pullCount: 3 }`
-- [ ] Mock: `POST /api/game/pull` → `{ tier: 4 }`
-- [ ] Mock: `GET /api/game/hint` → `{ tier4PlusCell: 10, tier5PlusCell: 20 }`
-- [ ] Mock: `GET /api/game/prizes/:address` → `[{ prizeId: "uuid-1", tier: 4, isClaimed: false }]`
-- [ ] 데이터 페칭: `react-query`로 `GET /api/game/board`, `GET /api/game/user-state` 연동
-- [ ] `pullCount` UI 표시 *(예: “현재 3회 뽑음”)*
-- [ ] ‘뽑기’ 핸들러: Cell 클릭 시 `POST /api/game/pull` 호출 *(useMutation)*
-- [ ] 성공 시 UI 상태 업데이트 및 `user-state`, `board` 쿼리 무효화
-- [ ] ‘힌트 받기’ 버튼: `pullCount` 기준 활성화
-- [ ] 힌트 클릭 시: `GET /api/game/hint` 호출 및 `isHinted` 상태 업데이트
+- [x] `react-query` 설정
+- [x] MSW(Mock Service Worker) 설치
+- [x] Mock: `GET /api/game/start-session` → `{ merkleRoot: "0x...", sessionId: 1 }`
+- [x] Mock: `GET /api/game/board` → `{ boardId: 1, revealedCells: [{ cellId: 5, tier: 6 }] }`
+- [x] Mock: `GET /api/game/user-state/:address` → `{ pullCount: 3 }`
+- [x] Mock: `POST /api/game/pull` → `{ tier: 4 }`
+- [x] Mock: `GET /api/game/hint` → `{ tier4PlusCell: 10, tier5PlusCell: 20 }`
+- [x] Mock: `GET /api/game/prizes/:address` → `[{ prizeId: "uuid-1", tier: 4, isClaimed: false }]`
+- [x] 데이터 페칭: `react-query`로 `GET /api/game/board`, `GET /api/game/user-state` 연동
+- [x] `pullCount` UI 표시 *(예: “현재 3회 뽑음”)*
+- [x] ‘뽑기’ 핸들러: Cell 클릭 시 `POST /api/game/pull` 호출 *(useMutation)*
+- [x] 성공 시 UI 상태 업데이트 및 `user-state`, `board` 쿼리 무효화
+- [x] ‘힌트 받기’ 버튼: `pullCount` 기준 활성화
+- [x] 힌트 클릭 시: `GET /api/game/hint` 호출 및 `isHinted` 상태 업데이트
 
 ### 마일스톤 F4: 백엔드 연동 (Real API)
-- [ ] MSW 핸들러 비활성화
-- [ ] `react-query`의 API 기본 URL을 Supabase Function 주소로 변경
-- [ ] 글로벌 에러 토스트 처리 *(errorBoundary 또는 onError)*
-- [ ] 실제 연동: `GET /api/game/board`
-- [ ] 실제 연동: `GET /api/game/user-state/:address`
-- [ ] 실제 연동: `GET /api/game/prizes/:address`
+- [x] MSW 핸들러 비활성화
+- [x] `react-query`의 API 기본 URL을 Supabase Function 주소로 변경
+- [x] 글로벌 에러 토스트 처리 *(errorBoundary 또는 onError)*
+- [x] 실제 연동: `GET /api/game/board`
+- [x] 실제 연동: `GET /api/game/user-state/:address`
+- [x] 실제 연동: `GET /api/game/prizes/:address`
 - [ ] 실제 연동: `POST /api/game/pull` *(티켓 미구매 에러 처리 포함)*
 - [ ] 실제 연동: `GET /api/game/hint`
 

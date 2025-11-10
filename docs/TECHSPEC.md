@@ -110,7 +110,11 @@
 - **React Hook Form**: 폼 관리
 
 #### UI & Styling
-- **CSS Modules**: `.module.css`
+- **CSS Modules**: `.module.css` (필수)
+  - 각 컴포넌트는 반드시 별도의 `{ComponentName}.module.css` 파일을 가져야 함
+  - 인라인 `className` 문자열 사용 금지 (TailwindCSS inline classes 사용 불가)
+  - 전역 스타일은 `src/styles/` 폴더에만 작성
+  - 예시: `Cell.tsx` → `Cell.module.css`
 - **React Spring**: 애니메이션
 - **Radix UI**: Headless UI 컴포넌트
 
@@ -167,9 +171,13 @@ pck/
 │   │   ├── lib/       # 유틸리티 (ky, date-fns, viem 클라이언트 등)
 │   │   ├── data/      # Jotai atoms, 컨트랙트 ABI
 │   │   ├── hooks/     # TanStack Query 훅, 커스텀 훅
-│   │   ├── components/ # 재사용 UI 컴포넌트 (Radix 기반)
+│   │   ├── components/ # 재사용 UI 컴포넌트
+│   │   │   ├── Cell.tsx
+│   │   │   ├── Cell.module.css        # Cell 컴포넌트 전용 스타일
+│   │   │   ├── GameBoard.tsx
+│   │   │   └── GameBoard.module.css   # GameBoard 컴포넌트 전용 스타일
 │   │   ├── pages/     # 메인 게임 페이지 (라우팅 단위)
-│   │   ├── styles/    # 전역 CSS, 변수
+│   │   ├── styles/    # 전역 CSS, CSS 변수, 공통 유틸리티
 │   │   └── main.tsx   # 앱 진입점
 │   ├── package.json
 │   └── vite.config.ts

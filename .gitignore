@@ -46,3 +46,6 @@ pnpm-debug.log*
 .turbo
 .cache
 .parcel-cache
+
+# Backup files
+*.bak

@@ -1,0 +1,143 @@
+/* App container */
+.app {
+  min-height: 100vh;
+  background-color: rgb(249 250 251); /* gray-50 */
+  padding: 2rem;
+}
+
+.container {
+  max-width: 56rem; /* 896px / 4xl */
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+}
+
+.title {
+  font-size: 2.25rem; /* 36px */
+  font-weight: 700;
+  color: rgb(17 24 39); /* gray-900 */
+}
+
+.auth {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.walletInfo {
+  font-size: 0.875rem;
+  color: rgb(75 85 99); /* gray-600 */
+}
+
+.walletLabel {
+  font-weight: 500;
+}
+
+.walletAddress {
+  font-family: ui-monospace, monospace;
+}
+
+.button {
+  padding: 0.5rem 1rem;
+  color: white;
+  border-radius: 0.5rem;
+  transition: all 0.3s;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.loginButton {
+  background-color: rgb(59 130 246); /* blue-500 */
+}
+
+.loginButton:hover {
+  background-color: rgb(37 99 235); /* blue-600 */
+}
+
+.logoutButton {
+  background-color: rgb(239 68 68); /* red-500 */
+}
+
+.logoutButton:hover {
+  background-color: rgb(220 38 38); /* red-600 */
+}
+
+/* Card */
+.card {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.cardTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: rgb(17 24 39); /* gray-900 */
+  margin-bottom: 1rem;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.infoText {
+  font-size: 1.125rem;
+  color: rgb(55 65 81); /* gray-700 */
+}
+
+/* Game Board Section */
+.boardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.boardControls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.pullCount {
+  font-size: 0.875rem;
+  color: rgb(75 85 99); /* gray-600 */
+}
+
+.hintButton {
+  padding: 0.5rem 1rem;
+  background-color: rgb(234 179 8); /* yellow-500 */
+  color: white;
+  border-radius: 0.5rem;
+  transition: all 0.3s;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.hintButton:hover:not(:disabled) {
+  background-color: rgb(202 138 4); /* yellow-600 */
+}
+
+.hintButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.walletBalance {
+  font-family: ui-monospace, monospace;
+  font-weight: 600;
+  color: rgb(34 197 94); /* green-500 */
+}

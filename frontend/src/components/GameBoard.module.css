@@ -1,0 +1,8 @@
+/* GameBoard container */
+.board {
+  display: grid;
+  gap: 0.5rem; /* 8px */
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+}

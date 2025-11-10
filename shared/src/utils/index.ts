@@ -1,2 +1,3 @@
 // Shared utilities will be exported from here
-export {};
+export { hashLeaf } from './merkle';
+export { isValidTier, isValidCellId } from './validation';
