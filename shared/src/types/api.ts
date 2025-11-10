@@ -14,9 +14,22 @@ export interface PullResponse {
   tier: number;
 }
 
+export interface UserStateResponse {
+  pullCount: number;
+  sessionId?: number;
+}
+
 export interface HintResponse {
   tier4PlusCell: number;
   tier5PlusCell: number;
+}
+
+export interface AdminCheckResponse {
+  isAdmin: boolean;
+}
+
+export interface AdminResetResponse {
+  success: boolean;
 }
 
 export interface ClaimProofResponse {

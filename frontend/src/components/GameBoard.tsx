@@ -5,10 +5,16 @@ import styles from './GameBoard.module.css'
 interface GameBoardProps {
   revealedCells: Array<{ cellId: number; tier: number }>
   hintedCells: Set<number>
+  loadingCellId?: number | null
   onCellClick: (cellId: number) => void
 }
 
-export function GameBoard({ revealedCells, hintedCells, onCellClick }: GameBoardProps) {
+export function GameBoard({
+  revealedCells,
+  hintedCells,
+  loadingCellId,
+  onCellClick,
+}: GameBoardProps) {
   const revealedMap = new Map(revealedCells.map((cell) => [cell.cellId, cell.tier]))
 
   return (
@@ -22,6 +28,7 @@ export function GameBoard({ revealedCells, hintedCells, onCellClick }: GameBoard
         const tier = revealedMap.get(index)
         const isRevealed = tier !== undefined
         const isHinted = hintedCells.has(index)
+        const isLoading = !isRevealed && loadingCellId === index
 
         return (
           <Cell
@@ -30,6 +37,7 @@ export function GameBoard({ revealedCells, hintedCells, onCellClick }: GameBoard
             isRevealed={isRevealed}
             tier={tier}
             isHinted={isHinted}
+            isLoading={isLoading}
             onClick={() => onCellClick(index)}
           />
         )

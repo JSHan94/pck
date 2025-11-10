@@ -1,5 +1,5 @@
 // Merkle utility functions
-import { keccak256, encodePacked } from 'viem';
+import { keccak256, encodePacked, concatHex } from 'viem';
 
 /**
  * Hash a leaf node for Merkle tree
@@ -17,4 +17,24 @@ export function hashLeaf(cellId: number, tier: number, salt: string): string {
       [cellId, tier, salt as `0x${string}`]
     )
   );
+}
+
+/**
+ * Verify a Merkle proof for a given leaf/root.
+ * Matches Solidity's `MerkleProof.verify` with sorted pair hashing.
+ */
+export function verifyMerkleProof(
+  leaf: `0x${string}`,
+  proof: string[],
+  root: `0x${string}`,
+): boolean {
+  let computedHash = leaf.toLowerCase() as `0x${string}`;
+
+  for (const proofElement of proof) {
+    const sibling = proofElement.toLowerCase() as `0x${string}`;
+    const pair = [computedHash, sibling].sort() as [`0x${string}`, `0x${string}`];
+    computedHash = keccak256(concatHex(pair));
+  }
+
+  return computedHash === root.toLowerCase();
 }

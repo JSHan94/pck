@@ -5,6 +5,7 @@ import type {
   HintResponse
 } from '@pck/shared'
 import { createBoard } from './createBoard'
+import { verifyCellProof } from '../lib/merkle'
 
 const BASE_URL = '/api'
 
@@ -49,6 +50,19 @@ export const handlers = [
     const cell = mockBoard.prizeLayout.find(c => c.cellId === cellId)
     if (!cell) {
       return HttpResponse.json({ error: 'Invalid cell ID' }, { status: 400 })
+    }
+
+    const proof = mockBoard.proofs[cellId] ?? []
+    const isValidProof = verifyCellProof({
+      cellId,
+      tier: cell.tier,
+      salt: cell.salt,
+      merkleProof: proof,
+      merkleRoot: mockBoard.merkleRoot,
+    })
+
+    if (!isValidProof) {
+      return HttpResponse.json({ error: 'Invalid merkle proof' }, { status: 500 })
     }
 
     // Add to revealed cells

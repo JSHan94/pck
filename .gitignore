@@ -3,13 +3,6 @@ node_modules/
 .pnp
 .pnp.js
 
-# Package management (루트에서는 사용하지 않음)
-package.json
-package-lock.json
-pnpm-lock.yaml
-pnpm-workspace.yaml
-yarn.lock
-
 # Testing
 coverage/
 *.lcov

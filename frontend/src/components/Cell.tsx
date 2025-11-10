@@ -5,10 +5,11 @@ interface CellProps {
   isRevealed: boolean
   tier?: number
   isHinted: boolean
+  isLoading: boolean
   onClick: () => void
 }
 
-export function Cell({ cellId, isRevealed, tier, isHinted, onClick }: CellProps) {
+export function Cell({ cellId, isRevealed, tier, isHinted, isLoading, onClick }: CellProps) {
   if (isRevealed && tier !== undefined) {
     const tierClass = styles[`tier${tier}` as keyof typeof styles]
     return (
@@ -21,10 +22,14 @@ export function Cell({ cellId, isRevealed, tier, isHinted, onClick }: CellProps)
   return (
     <button
       onClick={onClick}
-      disabled={isRevealed}
-      className={`${styles.cell} ${styles.unrevealed} ${isHinted ? styles.hinted : ''}`}
+      disabled={isRevealed || isLoading}
+      className={`${styles.cell} ${styles.unrevealed} ${isHinted ? styles.hinted : ''} ${isLoading ? styles.loading : ''}`}
     >
-      <span className={styles.cellNumber}>{cellId}</span>
+      {isLoading ? (
+        <span className={styles.loader} aria-label="Revealing cell" />
+      ) : (
+        <span className={styles.cellNumber}>{cellId}</span>
+      )}
     </button>
   )
 }

@@ -22,7 +22,7 @@
 
 - **프론트엔드 (React)**: UI/UX 담당. Privy를 통한 지갑/소셜 로그인 제공. *(Vite, viem, react-query 사용)*
 - **백엔드 (Supabase)**: 게임 로직(뽑기, 힌트)을 Supabase Edge Function으로 구현. 어드민이 보드를 사전 생성. **Receipt Push 방식**으로 트랜잭션 영수증을 검증하여 이벤트 처리.
-- **컨트랙트 (Solidity)**: 결제 및 검증만 담당 (티켓 구매 시 merkleRoot 커밋, merkleProof 검증 후 상품 지급). ERC1155 기반. *(Foundry 사용)*
+- **컨트랙트 (Solidity)**: *최종 Proof 단계*에서만 도입. 오프체인 게임 결과가 유효한지 영수증/프루프를 검증하며, 기본 게임 플레이는 프론트엔드+백엔드만으로 완전히 동작. ERC1155 기반. *(Foundry 사용)*
 - **Shared**: 프론트엔드와 백엔드 간 타입 정의를 공유하는 TypeScript 패키지.
 
 ### 프로젝트 구조 (Monorepo)
@@ -84,7 +84,8 @@ import type { StartSessionResponse } from '@pck/shared';
 #### 게임 시작 (Off-Chain + On-Chain)
 1. **(Off)** 프론트엔드가 백엔드 `GET /api/game/start-session` 호출.
 2. **(Off)** 백엔드가 **Board** 테이블에서 미사용 보드 1개를 랜덤 할당(`isAssigned=true`)하고, 해당 보드의 `merkleRoot` 및 새 `sessionId` 반환.
-3. **(On)** 프론트엔드가 `merkleRoot`와 `sessionId`를 인자로 `buyTicket()` 트랜잭션 호출 (컨트랙트는 `sessionId`와 `merkleRoot`를 매핑하여 저장).
+3. **(On · Proof 단계 이후)** 프론트엔드가 `merkleRoot`와 `sessionId`를 인자로 `buyTicket()` 트랜잭션 호출 (컨트랙트는 `sessionId`와 `merkleRoot`를 매핑하여 저장).  
+   → *오프체인 게임은 이 단계 없이도 완전히 동작하며, Proof 단계에서만 필요.*
 
 #### 게임 플레이 (Off-Chain)
 - 프론트엔드에서 셀 클릭 → 백엔드 `POST /api/game/pull` 호출.
@@ -93,10 +94,10 @@ import type { StartSessionResponse } from '@pck/shared';
 #### 힌트 (Off-Chain)
 - 3회 뽑기마다 `GET /api/game/hint` 호출.
 
-#### 상품 수령 (On-Chain)
+#### 상품 수령 (On-Chain · Proof 단계)
 1. 프론트엔드에서 백엔드 `GET /api/game/claim-proof` 호출 (수령할 `prizeId` 전달).
 2. 백엔드가 `(merkleProof, prizeId, prizeTier, cellId, salt)` 등 증명 데이터 반환.
-3. 프론트엔드가 이 증명으로 `claimPrize(proof, ...)` 함수 호출 → 상품(ERC1155) 수령.
+3. 프론트엔드가 이 증명으로 `claimPrize(proof, ...)` 함수 호출 → 상품(ERC1155) 수령 *(Proof 단계에서만 수행)*.
 
 #### 상품 풀 (보드 1개 기준, 총 49개)
 - Tier 1: 1개  
@@ -105,6 +106,11 @@ import type { StartSessionResponse } from '@pck/shared';
 - Tier 4: 10개  
 - Tier 5: 18개  
 - Tier 6: 12개  
+
+### 개발 우선순위
+1. **Shared → Backend → Frontend** 순으로 오프체인 게임 기능을 완성한다. (티켓 구매 없이도 플레이 가능해야 함)
+2. 오프체인 기능이 QA를 통과하면 **Proof 단계 준비**로서 영수증 검증 API, Merkle proof 생성 등을 다듬는다.
+3. 마지막에만 **컨트랙트 + Receipt Push**를 붙여 온체인 증명 흐름을 검증한다. 이때까지의 모든 시나리오는 이미 프론트/백엔드만으로 동작해야 한다.
 
 ---
 
@@ -125,6 +131,7 @@ import type { StartSessionResponse } from '@pck/shared';
   - [x] `StartSessionResponse`: `{ merkleRoot: string, sessionId: number }`
   - [x] `PullRequest`: `{ cellId: number, sessionId: number }`
   - [x] `PullResponse`: `{ tier: number }`
+  - [x] `UserStateResponse`: `{ pullCount: number, sessionId?: number }`
   - [x] `HintResponse`: `{ tier4PlusCell: number, tier5PlusCell: number }`
   - [x] `ClaimProofResponse`: `{ merkleProof: string[], prizeId: string, prizeTier: number, cellId: number, salt: string, sessionId: number }`
   - [x] `VerifyReceiptRequest`: `{ txHash: string, sessionId?: number, prizeId?: string }`
@@ -213,11 +220,23 @@ import type { StartSessionResponse } from '@pck/shared';
 - [x] 실제 연동: `GET /api/game/board`
 - [x] 실제 연동: `GET /api/game/user-state/:address`
 - [x] 실제 연동: `GET /api/game/prizes/:address`
-- [ ] 실제 연동: `POST /api/game/pull` *(티켓 미구매 에러 처리 포함)*
-- [ ] 실제 연동: `GET /api/game/hint`
+- [x] 실제 연동: `POST /api/game/pull` *(티켓 미구매 에러 처리 포함)*
+- [x] 실제 연동: `GET /api/game/hint`
 
-### 마일스톤 F5: 스마트 컨트랙트 연동 (Receipt Push)
-**목표**: 온체인 트랜잭션(티켓 구매/Root 커밋, 상품 수령/Proof 검증) UI 및 로직 구현. Receipt Push 방식으로 영수증 검증.
+### 마일스톤 F5: 최종 마무리 및 배포 (오프체인 버전 완성)
+**목표**: 어드민 기능, 애니메이션 추가 및 최종 배포. 이 시점까지는 프론트+백엔드만으로 게임이 100% 동작해야 함.
+- [x] ‘강제 리셋’ 버튼(어드민): 백엔드 API 호출 시 `user.wallet.address`로 권한 확인  
+  *(참고: v6 아키텍처에서는 ‘강제 리셋’ 대신 ‘새 보드 할당’일 수 있음. B3와 협의)*
+- [x] 리셋 클릭 시: `POST /api/admin/reset-board` 호출 및 모든 쿼리 무효화 *(B3의 pre-generate-boards와 동작 정의 필요)*
+- [x] 애니메이션: 셀 클릭(뽑기) 로딩 → 응답 수신 → 셀 Flip 및 Tier 공개
+- [x] 반응형: 모바일 그리드/버튼 레이아웃 점검
+- [x] *(선택)* 클라이언트 사이드 merkleProof 검증 추가
+- [ ] Vercel 배포 *(Preview + Production 환경 구성)*
+- [ ] 배포 환경 변수: Supabase URL/Key, Privy App ID, 체인 ID, RPC URL *(컨트랙트 주소는 Proof 단계에서 추가)*
+
+### 마일스톤 F6: 스마트 컨트랙트 연동 (Proof Stage · 최종)
+**목표**: 온체인 트랜잭션(티켓 구매/Root 커밋, 상품 수령/Proof 검증) UI 및 Receipt Push 로직을 연결한다.  
+*이 마일스톤은 오프체인 버전이 배포·안정화된 뒤에만 진행한다.*
 - [ ] 컨트랙트 ABI 및 배포 주소 환경 변수 설정
 - [ ] '게임 시작(티켓 구매)' 버튼 UI
 - [ ] (1단계) `GET /api/game/start-session` 호출로 Root 요청
@@ -236,17 +255,6 @@ import type { StartSessionResponse } from '@pck/shared';
 - [ ] (5) `POST /api/verify/prize-claim` ({txHash, prizeId}) 호출로 영수증 검증
 - [ ] 클레임 트랜잭션 로딩/성공/실패 모달 처리
 - [ ] 영수증 검증 성공 시 `prizes` 쿼리 무효화
-
-### 마일스톤 F6: 최종 마무리 및 배포
-**목표**: 어드민 기능, 애니메이션 추가 및 최종 배포.
-- [ ] ‘강제 리셋’ 버튼(어드민): 백엔드 API 호출 시 `user.wallet.address`로 권한 확인  
-  *(참고: v6 아키텍처에서는 ‘강제 리셋’ 대신 ‘새 보드 할당’일 수 있음. B3와 협의)*
-- [ ] 리셋 클릭 시: `POST /api/admin/reset-board` 호출 및 모든 쿼리 무효화 *(B3의 pre-generate-boards와 동작 정의 필요)*
-- [ ] 애니메이션: 셀 클릭(뽑기) 로딩 → 응답 수신 → 셀 Flip 및 Tier 공개
-- [ ] 반응형: 모바일 그리드/버튼 레이아웃 점검
-- [ ] *(선택)* 클라이언트 사이드 merkleProof 검증 추가
-- [ ] Vercel 배포
-- [ ] 배포 환경 변수: Supabase URL/Key, 컨트랙트 주소, 체인 ID, Privy App ID
 
 ---
 
@@ -301,7 +309,7 @@ import type { StartSessionResponse } from '@pck/shared';
 - [ ] **GET /api/game/prizes/:address**: 미청구 `PrizeClaim` 목록 반환
 - [ ] **POST /api/game/pull** *(Body: `{ cellId, sessionId }`)*
   - [ ] 인증 및 `sessionId` 소유권 확인
-  - [ ] `isActive` 확인(B6 리스너가 true인지)
+  - [ ] `isActive` 확인 *(Proof 단계 이전에는 임시 플래그/always true 처리)*
   - [ ] 중복 뽑기 방지
   - [ ] `boardId` 조회 → Board.prizeLayout에서 `tier` 조회
   - [ ] `RevealedCell` 기록, `pullCount` 증가, `PrizeClaim` 기록
@@ -318,8 +326,9 @@ import type { StartSessionResponse } from '@pck/shared';
   - [ ] Merkle Tree 재생성 → `leafHash` 생성 → `merkleProof` 생성
   - [ ] `(merkleProof, prizeId, prizeTier, cellId, salt)` 반환
 
-### 마일스톤 B6: 영수증 검증 API (Receipt Push)
-**목표**: 프론트엔드가 트랜잭션 완료 후 txHash를 전송하면, 백엔드가 영수증을 직접 조회하여 이벤트 검증.
+### 마일스톤 B6: 영수증 검증 API (Proof Stage · 컨트랙트 이후)
+**목표**: 프론트엔드가 트랜잭션 완료 후 txHash를 전송하면, 백엔드가 영수증을 직접 조회하여 이벤트 검증.  
+*컨트랙트 배포 및 F6가 준비된 뒤에만 수행.*
 - [ ] viem 설정 및 RPC 클라이언트 구성
 - [ ] **POST /api/verify/ticket-purchase**
   - [ ] Body: `{ txHash: string, sessionId: number }`
@@ -352,7 +361,8 @@ import type { StartSessionResponse } from '@pck/shared';
 
 ## 4. 컴포넌트 3: 스마트 컨트랙트 (Solidity)
 
-**목표**: 최소한의 온체인 로직 담당. ERC1155 기반, Merkle Proof로 티켓 판매(Root 커밋) 및 상품 지급(Proof 검증).
+**목표**: 최소한의 온체인 로직 담당. ERC1155 기반, Merkle Proof로 티켓 판매(Root 커밋) 및 상품 지급(Proof 검증).  
+*Shared/Backend/Frontend가 완전히 동작하고 배포된 뒤 마지막 단계에서 수행.*
 
 ### 마일스톤 C1: 기본 설정 및 역할 정의
 - [ ] Foundry 프로젝트 초기화

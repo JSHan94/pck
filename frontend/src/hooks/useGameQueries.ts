@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { usePrivy } from '@privy-io/react-auth'
 import { api } from '../lib/api'
 import type { PullRequest } from '@pck/shared'
 
@@ -32,9 +33,16 @@ export function usePrizes() {
 
 export function usePull() {
   const queryClient = useQueryClient()
+  const { getAccessToken } = usePrivy()
 
   return useMutation({
-    mutationFn: (data: PullRequest) => api.game.pull(data),
+    mutationFn: async (data: PullRequest) => {
+      const accessToken = await getAccessToken()
+      if (!accessToken) {
+        throw new Error('Please log in before revealing cells')
+      }
+      return api.game.pull(data, { accessToken })
+    },
     onSuccess: () => {
       // Invalidate and refetch board and user state
       queryClient.invalidateQueries({ queryKey: gameKeys.board() })
@@ -43,10 +51,21 @@ export function usePull() {
   })
 }
 
-export function useHint(sessionId: number) {
+export function useHint(sessionId?: number) {
+  const { getAccessToken } = usePrivy()
+
   return useQuery({
     queryKey: [...gameKeys.all, 'hint', sessionId] as const,
-    queryFn: () => api.game.getHint(sessionId),
+    queryFn: async () => {
+      if (sessionId === undefined) {
+        throw new Error('No active game session found. Please start a new game.')
+      }
+      const accessToken = await getAccessToken()
+      if (!accessToken) {
+        throw new Error('Please log in before requesting hints')
+      }
+      return api.game.getHint(sessionId, { accessToken })
+    },
     enabled: false, // Only fetch when manually triggered
   })
 }

@@ -1,6 +1,7 @@
 // Merkle utility tests
 import { describe, it, expect } from 'vitest';
-import { hashLeaf } from './merkle';
+import { hashLeaf, verifyMerkleProof } from './merkle';
+import { concatHex, keccak256 } from 'viem';
 
 describe('hashLeaf', () => {
   it('should return a hex string starting with 0x', () => {
@@ -40,5 +41,32 @@ describe('hashLeaf', () => {
     const hash2 = hashLeaf(0, 1, salt2);
 
     expect(hash1).not.toBe(hash2);
+  });
+});
+
+describe('verifyMerkleProof', () => {
+  const saltA = '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+  const saltB = '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb';
+
+const leafA = hashLeaf(0, 1, saltA) as `0x${string}`;
+const leafB = hashLeaf(1, 2, saltB) as `0x${string}`;
+
+  const hashPair = (left: `0x${string}`, right: `0x${string}`) => {
+    const [a, b] = [left, right].sort();
+    return keccak256(concatHex([a, b]));
+  };
+
+  const root = hashPair(leafA, leafB);
+
+  it('returns true for a valid proof', () => {
+    const proof = [leafB];
+
+    expect(verifyMerkleProof(leafA, proof, root)).toBe(true);
+  });
+
+  it('returns false for an invalid proof', () => {
+    const invalidProof = ['0x9999999999999999999999999999999999999999999999999999999999999999' as `0x${string}`];
+
+    expect(verifyMerkleProof(leafA, invalidProof, root)).toBe(false);
   });
 });

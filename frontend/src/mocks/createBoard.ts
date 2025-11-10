@@ -1,6 +1,7 @@
 import { TIER_DISTRIBUTION, hashLeaf } from '@pck/shared'
 import { MerkleTree } from 'merkletreejs'
 import { keccak256 } from 'viem'
+import { Buffer } from 'buffer'
 
 interface Cell {
   cellId: number
@@ -12,6 +13,7 @@ interface Board {
   boardId: string
   prizeLayout: Cell[]
   merkleRoot: string
+  proofs: Record<number, string[]>
 }
 
 /**
@@ -78,25 +80,28 @@ export function createBoard(): Board {
 
   // Create merkle tree
   const leaves = cells.map((cell) => {
-    // Hash: keccak256(abi.encodePacked(cellId, tier, salt))
-    // Use shared hashLeaf utility (browser-compatible, matches contract logic)
     const hash = hashLeaf(cell.cellId, cell.tier, cell.salt)
-    // Convert hex string to Uint8Array for MerkleTree
-    return hexToUint8Array(hash)
+    return Buffer.from(hexToUint8Array(hash))
   })
 
-  // Hash function wrapper for MerkleTree (expects Uint8Array input)
-  const hashFn = (data: Uint8Array): Uint8Array => {
-    const hash = keccak256(data)
-    return hexToUint8Array(hash)
+  const hashFn = (data: Buffer): Buffer => {
+    const hash = keccak256(new Uint8Array(data))
+    return Buffer.from(hexToUint8Array(hash))
   }
 
   const tree = new MerkleTree(leaves, hashFn, { sortPairs: true })
   const merkleRoot = '0x' + uint8ArrayToHex(tree.getRoot())
+  const proofs: Record<number, string[]> = {}
+
+  cells.forEach((cell, index) => {
+    const proofNodes = tree.getProof(leaves[index], index)
+    proofs[cell.cellId] = proofNodes.map((node) => '0x' + node.data.toString('hex'))
+  })
 
   return {
     boardId: 'mock-board-' + Date.now(),
     prizeLayout: cells,
     merkleRoot,
+    proofs,
   }
 }

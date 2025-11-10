@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { usePrivy, useWallets } from '@privy-io/react-auth'
+import { toast } from 'react-hot-toast'
 import { GRID_SIZE, TOTAL_CELLS, HINT_INTERVAL } from '@pck/shared'
 import { GameBoard } from './components/GameBoard'
 import { useGameBoard, useUserState, usePull, useHint } from './hooks/useGameQueries'
 import { useWalletBalance } from './hooks/useWalletBalance'
+import { useAdminStatus, useAdminReset } from './hooks/useAdminTools'
 import styles from './App.module.css'
 
 function App() {
@@ -20,13 +22,18 @@ function App() {
   const { data: boardData } = useGameBoard()
   const { data: userStateData } = useUserState()
   const pullMutation = usePull()
-  const { refetch: refetchHint } = useHint(1)
+  const sessionId = userStateData?.sessionId
+  const { refetch: refetchHint } = useHint(sessionId)
+  const { data: adminStatus } = useAdminStatus(address)
+  const adminReset = useAdminReset(address)
 
-  // Local state for hints
+  // Local state for hints & animations
   const [hintedCells, setHintedCells] = useState<Set<number>>(new Set())
+  const [activeCellId, setActiveCellId] = useState<number | null>(null)
 
   const revealedCells = boardData?.revealedCells || []
   const pullCount = userStateData?.pullCount || 0
+  const isAdmin = Boolean(adminStatus?.isAdmin)
 
   const handleCellClick = (cellId: number) => {
     // Check if cell is already revealed
@@ -34,18 +41,50 @@ function App() {
       return
     }
 
-    // Call API with pull mutation
-    pullMutation.mutate({
-      cellId,
-      sessionId: 1, // TODO: Get from session state
-    })
+    if (!sessionId) {
+      toast.error('No active session found. Please start a new game before pulling cells.')
+      return
+    }
+
+    setActiveCellId(cellId)
+
+    pullMutation.mutate(
+      {
+        cellId,
+        sessionId,
+      },
+      {
+        onError: () => {
+          setActiveCellId(null)
+        },
+        onSettled: () => {
+          setActiveCellId(null)
+        },
+      },
+    )
   }
 
   const handleHint = async () => {
+    if (!sessionId) {
+      toast.error('No active session found. Please start a new game before requesting hints.')
+      return
+    }
+
     const { data } = await refetchHint()
     if (data) {
       setHintedCells(new Set([data.tier4PlusCell, data.tier5PlusCell]))
     }
+  }
+
+  const handleForceReset = () => {
+    adminReset.mutate(undefined, {
+      onSuccess: () => {
+        toast.success('Board reset requested. Refreshing data...')
+      },
+      onError: (error) => {
+        toast.error(error instanceof Error ? error.message : 'Failed to reset board')
+      },
+    })
   }
 
   return (
@@ -106,16 +145,26 @@ function App() {
                 <p className={styles.pullCount}>Pull Count: {pullCount}/{TOTAL_CELLS}</p>
                 <button
                   onClick={handleHint}
-                  disabled={pullCount % HINT_INTERVAL !== 0 || pullCount === 0}
+                  disabled={!sessionId || pullCount % HINT_INTERVAL !== 0 || pullCount === 0}
                   className={styles.hintButton}
                 >
                   Get Hint {pullCount % HINT_INTERVAL === 0 && pullCount > 0 ? '✨' : `(${HINT_INTERVAL - (pullCount % HINT_INTERVAL)})`}
                 </button>
+                {isAdmin && (
+                  <button
+                    onClick={handleForceReset}
+                    disabled={adminReset.isPending}
+                    className={`${styles.button} ${styles.adminButton}`}
+                  >
+                    {adminReset.isPending ? 'Resetting...' : 'Force Reset'}
+                  </button>
+                )}
               </div>
             </div>
             <GameBoard
               revealedCells={revealedCells}
               hintedCells={hintedCells}
+              loadingCellId={activeCellId}
               onCellClick={handleCellClick}
             />
           </div>
