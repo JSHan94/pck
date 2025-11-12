@@ -277,7 +277,7 @@ import type { StartSessionResponse } from '@pck/shared';
 - [x] **RevealedCell**: `id`, `sessionId (FK)`, `cellId`, `tier`
 - [x] **PrizeClaim**: `prizeId (PK, uuid)`, `userAddress (FK)`, `tier`, `isClaimed`, `sessionId (FK)`, `cellId`
 - [x] 마이그레이션 파일 생성 및 실행 (`supabase/migrations`)
-- [ ] *(선택)* Supabase TypeScript 타입 생성 및 `@pck/shared`와 동기화
+- [x] *(선택)* Supabase TypeScript 타입 생성 및 `@pck/shared`와 동기화
 
 ### 마일스톤 B3: 핵심 게임 로직 (Edge Functions)
 - [x] Edge Functions (Deno/TS) 환경 설정

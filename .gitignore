@@ -21,6 +21,8 @@ out/
 .env.test.local
 .env.production.local
 
+.vite/
+
 # IDE
 .vscode/
 .idea/
