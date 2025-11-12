@@ -304,8 +304,8 @@ import type { StartSessionResponse } from '@pck/shared';
   - [x] 해당 `boardId`로 `isAssigned=true` 업데이트
   - [x] GameSession에 `(userAddress, boardId, isActive=false, pullCount=0)` 삽입 → `new_sessionId`
   - [x] 트랜잭션 커밋 → `(selected_board.merkleRoot, new_sessionId)` 반환
-- [ ] **GET /api/game/board**: GameSession의 `RevealedCell` 목록 반환
-- [ ] **GET /api/game/user-state/:address**: 현재 세션 기준 `pullCount` 반환
+- [x] **GET /api/game/board**: GameSession의 `RevealedCell` 목록 반환
+- [x] **GET /api/game/user-state/:address**: 현재 세션 기준 `pullCount` 반환
 - [ ] **GET /api/game/prizes/:address**: 미청구 `PrizeClaim` 목록 반환
 - [ ] **POST /api/game/pull** *(Body: `{ cellId, sessionId }`)*
   - [ ] 인증 및 `sessionId` 소유권 확인
