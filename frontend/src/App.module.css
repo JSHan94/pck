@@ -155,6 +155,148 @@
   background-color: rgb(79 70 229); /* indigo-600 */
 }
 
+.claimButton {
+  background-color: rgb(14 165 233); /* sky-500 */
+}
+
+.claimButton:hover {
+  background-color: rgb(2 132 199); /* sky-600 */
+}
+
+.prizeList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.prizeItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border: 1px solid rgb(229 231 235); /* gray-200 */
+  border-radius: 0.5rem;
+  background-color: rgb(249 250 251); /* gray-50 */
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.prizeTitle {
+  font-weight: 600;
+  margin: 0;
+}
+
+.prizeTier {
+  margin: 0.15rem 0 0;
+  color: rgb(75 85 99); /* gray-600 */
+  font-size: 0.9rem;
+}
+
+.prizeStatusUnclaimed,
+.prizeStatusClaimed {
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.prizeStatusUnclaimed {
+  background-color: rgb(254 240 138); /* yellow-200 */
+  color: rgb(133 77 14); /* amber-800 */
+}
+
+.prizeStatusClaimed {
+  background-color: rgb(209 250 229); /* green-200 */
+  color: rgb(6 95 70); /* green-900 */
+}
+
+.emptyState {
+  margin: 0;
+  color: rgb(107 114 128); /* gray-500 */
+  font-style: italic;
+}
+
+.startButton {
+  background-color: rgb(34 197 94); /* green-400 */
+}
+
+.startButton:disabled {
+  background-color: rgb(187 247 208); /* green-100 */
+  color: rgb(21 128 61); /* green-600 */
+}
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 50;
+}
+
+.modal {
+  background: white;
+  border-radius: 0.75rem;
+  width: min(100%, 24rem);
+  padding: 1.5rem;
+  box-shadow: 0 10px 25px rgb(0 0 0 / 0.2);
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.modalTitle {
+  font-size: 1.25rem;
+  margin: 0;
+}
+
+.modalClose {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  color: rgb(75 85 99);
+}
+
+.modalContent {
+  margin-bottom: 1.25rem;
+}
+
+.modalText {
+  margin: 0 0 0.5rem;
+  color: rgb(55 65 81);
+}
+
+.modalHint {
+  margin: 0;
+  font-size: 0.875rem;
+  color: rgb(107 114 128);
+  font-style: italic;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.modalSecondary {
+  padding: 0.5rem 1rem;
+  background: rgb(229 231 235);
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+
 @media (max-width: 1024px) {
   .app {
     padding: 1.5rem;

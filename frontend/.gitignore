@@ -1,5 +1,7 @@
 # Dependencies
 node_modules/
+.pnpm-store/
+.vercel/
 
 # Build outputs
 dist/
@@ -15,6 +17,10 @@ coverage/
 
 # Logs
 *.log
+pnpm-debug.log
 
 # Vite
 .vite-cache/
+
+# OS
+.DS_Store

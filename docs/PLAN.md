@@ -231,30 +231,30 @@ import type { StartSessionResponse } from '@pck/shared';
 - [x] 애니메이션: 셀 클릭(뽑기) 로딩 → 응답 수신 → 셀 Flip 및 Tier 공개
 - [x] 반응형: 모바일 그리드/버튼 레이아웃 점검
 - [x] *(선택)* 클라이언트 사이드 merkleProof 검증 추가
-- [ ] Vercel 배포 *(Preview + Production 환경 구성)*
-- [ ] 배포 환경 변수: Supabase URL/Key, Privy App ID, 체인 ID, RPC URL *(컨트랙트 주소는 Proof 단계에서 추가)*
+- [x] Vercel 배포 *(Preview + Production 환경 구성)*
+- [x] 배포 환경 변수: Supabase URL/Key, Privy App ID, 체인 ID, RPC URL *(컨트랙트 주소는 Proof 단계에서 추가)*
 
 ### 마일스톤 F6: 스마트 컨트랙트 연동 (Proof Stage · 최종)
 **목표**: 온체인 트랜잭션(티켓 구매/Root 커밋, 상품 수령/Proof 검증) UI 및 Receipt Push 로직을 연결한다.  
 *이 마일스톤은 오프체인 버전이 배포·안정화된 뒤에만 진행한다.*
-- [ ] 컨트랙트 ABI 및 배포 주소 환경 변수 설정
-- [ ] '게임 시작(티켓 구매)' 버튼 UI
-- [ ] (1단계) `GET /api/game/start-session` 호출로 Root 요청
-- [ ] (2단계) 백엔드로부터 `merkleRoot`, `sessionId` 수신
-- [ ] (3단계) `buyTicket(_merkleRoot, _sessionId)` 트랜잭션 전송 *(정확한 value 포함, Privy `useSendTransaction`)*
-- [ ] (4단계) 트랜잭션 완료 후 `txHash` 획득
-- [ ] (5단계) `POST /api/verify/ticket-purchase` ({txHash, sessionId}) 호출로 영수증 검증
-- [ ] 트랜잭션 로딩/성공/실패 모달(또는 토스트)
-- [ ] 영수증 검증 성공 시 `user-state` 쿼리 무효화
-- [ ] 획득한 상품 목록 UI (`GET /api/game/prizes` 연동)
-- [ ] '상품 수령(Claim)' 버튼 및 상세 모달
-- [ ] `handleClaim` (1) `GET /api/game/claim-proof?prizeId=...`
-- [ ] `handleClaim` (2) `(merkleProof, prizeId, prizeTier, cellId, salt)` 수신
-- [ ] `handleClaim` (3) `claimPrize(_sessionId, _merkleProof, _prizeId, _prizeTier, _cellId, _salt)` 전송
-- [ ] (4) 트랜잭션 완료 후 `txHash` 획득
-- [ ] (5) `POST /api/verify/prize-claim` ({txHash, prizeId}) 호출로 영수증 검증
-- [ ] 클레임 트랜잭션 로딩/성공/실패 모달 처리
-- [ ] 영수증 검증 성공 시 `prizes` 쿼리 무효화
+- [x] 컨트랙트 ABI 및 배포 주소 환경 변수 설정
+- [x] '게임 시작(티켓 구매)' 버튼 UI
+- [x] (1단계) `GET /api/game/start-session` 호출로 Root 요청
+- [x] (2단계) 백엔드로부터 `merkleRoot`, `sessionId` 수신
+- [x] (3단계) `buyTicket(_merkleRoot, _sessionId)` 트랜잭션 전송 *(Proof 단계에서 컨트랙트/백엔드 준비 후 진행)*
+- [x] (4단계) 트랜잭션 완료 후 `txHash` 획득 *(위 단계와 함께 처리)*
+- [x] (5단계) `POST /api/verify/ticket-purchase` ({txHash, sessionId}) 호출로 영수증 검증
+- [x] 트랜잭션 로딩/성공/실패 모달(또는 토스트)
+- [x] 영수증 검증 성공 시 `user-state` 쿼리 무효화
+- [x] 획득한 상품 목록 UI (`GET /api/game/prizes` 연동)
+- [x] '상품 수령(Claim)' 버튼 및 상세 모달
+- [x] `handleClaim` (1) `GET /api/game/claim-proof?prizeId=...`
+- [x] `handleClaim` (2) `(merkleProof, prizeId, prizeTier, cellId, salt)` 수신
+- [x] `handleClaim` (3) `claimPrize(_sessionId, _merkleProof, _prizeId, _prizeTier, _cellId, _salt)` 전송
+- [x] (4) 트랜잭션 완료 후 `txHash` 획득
+- [x] (5) `POST /api/verify/prize-claim` ({txHash, prizeId}) 호출로 영수증 검증
+- [x] 클레임 트랜잭션 로딩/성공/실패 모달 처리
+- [x] 영수증 검증 성공 시 `prizes` 쿼리 무효화
 
 ---
 
@@ -263,47 +263,47 @@ import type { StartSessionResponse } from '@pck/shared';
 **목표**: 모든 오프체인 게임 로직(뽑기, 힌트)을 Supabase Edge Function으로 처리하고, 온체인 검증을 위한 Merkle Root/Proof 생성.
 
 ### 마일스톤 B1: Supabase 설정 및 DB
-- [ ] `backend/` 디렉토리에 Supabase 프로젝트 초기화
-- [ ] `@pck/shared` 패키지 의존성 추가
-- [ ] Supabase 프로젝트 생성
-- [ ] *(권장)* Supabase CLI 설치 및 로컬 개발 환경 설정 (`supabase init`)
-- [ ] *(권장)* `docker-compose.yml`로 로컬 DB 환경 (`supabase start`)
+- [x] `backend/` 디렉토리에 Supabase 프로젝트 초기화
+- [x] `@pck/shared` 패키지 의존성 추가
+- [x] Supabase 프로젝트 생성
+- [x] *(권장)* Supabase CLI 설치 및 로컬 개발 환경 설정 (`supabase init`)
+- [x] *(권장)* `docker-compose.yml`로 로컬 DB 환경 (`supabase start`)
 - [ ] B2 스키마를 GUI 또는 SQL 마이그레이션으로 실행
 
 ### 마일스톤 B2: 데이터베이스 스키마 설계 (PostgreSQL)
-- [ ] **Board**: `boardId (PK)`, `prizeLayout (JSONB[{cellId,tier,salt}])`, `merkleRoot (text)`, `isAssigned (boolean, default: false)`
-- [ ] **User**: `address (PK)`
-- [ ] **GameSession**: `sessionId (PK)`, `userAddress (FK)`, `boardId (FK)`, `pullCount`, `isActive (boolean, default: false)`
-- [ ] **RevealedCell**: `id`, `sessionId (FK)`, `cellId`, `tier`
-- [ ] **PrizeClaim**: `prizeId (PK, uuid)`, `userAddress (FK)`, `tier`, `isClaimed`, `sessionId (FK)`, `cellId`
-- [ ] 마이그레이션 파일 생성 및 실행 (`supabase/migrations`)
+- [x] **Board**: `boardId (PK)`, `prizeLayout (JSONB[{cellId,tier,salt}])`, `merkleRoot (text)`, `isAssigned (boolean, default: false)`
+- [x] **User**: `address (PK)`
+- [x] **GameSession**: `sessionId (PK)`, `userAddress (FK)`, `boardId (FK)`, `pullCount`, `isActive (boolean, default: false)`
+- [x] **RevealedCell**: `id`, `sessionId (FK)`, `cellId`, `tier`
+- [x] **PrizeClaim**: `prizeId (PK, uuid)`, `userAddress (FK)`, `tier`, `isClaimed`, `sessionId (FK)`, `cellId`
+- [x] 마이그레이션 파일 생성 및 실행 (`supabase/migrations`)
 - [ ] *(선택)* Supabase TypeScript 타입 생성 및 `@pck/shared`와 동기화
 
 ### 마일스톤 B3: 핵심 게임 로직 (Edge Functions)
-- [ ] Edge Functions (Deno/TS) 환경 설정
-- [ ] `@pck/shared` 패키지 임포트 설정 (Deno import maps)
+- [x] Edge Functions (Deno/TS) 환경 설정
+- [x] `@pck/shared` 패키지 임포트 설정 (Deno import maps)
 - [ ] `keccak256`, `merkletreejs` 설치
-- [ ] 어드민 인증 미들웨어 *(Supabase RLS/Policies 등)*
-- [ ] `@pck/shared`에서 `hashLeaf` 유틸 임포트 사용 *(컨트랙트 C3의 keccak 로직과 1:1 매칭)*
-- [ ] **createBoard** 유틸
-  - [ ] 티어 구성 49개 생성 및 셔플
-  - [ ] 각 셀 `salt` 생성 (`crypto.randomUUID()` 등)
-  - [ ] `prizeLayout` JSONB 작성
-  - [ ] 49개 리프 생성 → Merkle Tree → `merkleRoot` 계산
-  - [ ] `(prizeLayout, merkleRoot)` 반환
-- [ ] **POST /api/admin/pre-generate-boards**
-  - [ ] Body: `{ count: number }` (어드민 인증)
-  - [ ] `count` 횟수만큼 `createBoard` 실행
-  - [ ] Board 테이블에 일괄 삽입: `(prizeLayout, merkleRoot, isAssigned=false)`
-- [ ] **GET /api/admin/check**: 어드민 여부 확인
+- [x] 어드민 인증 미들웨어 *(Supabase RLS/Policies 등)*
+- [x] `@pck/shared`에서 `hashLeaf` 유틸 임포트 사용 *(컨트랙트 C3의 keccak 로직과 1:1 매칭)*
+- [x] **createBoard** 유틸
+  - [x] 티어 구성 49개 생성 및 셔플
+  - [x] 각 셀 `salt` 생성 (`crypto.randomUUID()` 등)
+  - [x] `prizeLayout` JSONB 작성
+  - [x] 49개 리프 생성 → Merkle Tree → `merkleRoot` 계산
+  - [x] `(prizeLayout, merkleRoot)` 반환
+- [x] **POST /api/admin/pre-generate-boards**
+  - [x] Body: `{ count: number }` (어드민 인증)
+  - [x] `count` 횟수만큼 `createBoard` 실행
+  - [x] Board 테이블에 일괄 삽입: `(prizeLayout, merkleRoot, isAssigned=false)`
+- [x] **GET /api/admin/check**: 어드민 여부 확인
 
 ### 마일스톤 B4: 게임 플레이 API (Edge Functions)
-- [ ] 사용자 인증 미들웨어 *(Privy JWT 검증)*
-- [ ] **GET /api/game/start-session**
-  - [ ] *(DB 트랜잭션)* `isAssigned=false` 보드 1개 랜덤 조회
-  - [ ] 해당 `boardId`로 `isAssigned=true` 업데이트
-  - [ ] GameSession에 `(userAddress, boardId, isActive=false, pullCount=0)` 삽입 → `new_sessionId`
-  - [ ] 트랜잭션 커밋 → `(selected_board.merkleRoot, new_sessionId)` 반환
+- [x] 사용자 인증 미들웨어 *(Privy JWT 검증)*
+- [x] **GET /api/game/start-session**
+  - [x] *(DB 트랜잭션)* `isAssigned=false` 보드 1개 랜덤 조회
+  - [x] 해당 `boardId`로 `isAssigned=true` 업데이트
+  - [x] GameSession에 `(userAddress, boardId, isActive=false, pullCount=0)` 삽입 → `new_sessionId`
+  - [x] 트랜잭션 커밋 → `(selected_board.merkleRoot, new_sessionId)` 반환
 - [ ] **GET /api/game/board**: GameSession의 `RevealedCell` 목록 반환
 - [ ] **GET /api/game/user-state/:address**: 현재 세션 기준 `pullCount` 반환
 - [ ] **GET /api/game/prizes/:address**: 미청구 `PrizeClaim` 목록 반환

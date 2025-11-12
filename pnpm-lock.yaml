@@ -84,6 +84,9 @@ importers:
       vite:
         specifier: ^6.0.5
         version: 6.4.1(@types/node@20.19.23)(jiti@2.6.1)(lightningcss@1.30.2)
+      vitest:
+        specifier: ^1.6.1
+        version: 1.6.1(@types/node@20.19.23)(lightningcss@1.30.2)
 
   shared:
     dependencies:

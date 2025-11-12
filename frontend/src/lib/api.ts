@@ -6,6 +6,8 @@ import type {
   UserStateResponse,
   AdminCheckResponse,
   AdminResetResponse,
+  VerifyReceiptResponse,
+  ClaimProofResponse,
 } from '@pck/shared'
 import { config } from './config'
 
@@ -123,6 +125,17 @@ export const api = {
       if (!response.ok) throw new Error('Failed to fetch prizes')
       return response.json()
     },
+
+    getClaimProof: async (
+      prizeId: string,
+      options?: { accessToken?: string },
+    ): Promise<ClaimProofResponse> => {
+      const response = await fetch(`${API_BASE_URL}/game/claim-proof?prizeId=${encodeURIComponent(prizeId)}`, {
+        headers: buildJsonHeaders(options?.accessToken),
+      })
+
+      return handleJsonResponse<ClaimProofResponse>(response, 'Failed to fetch claim proof')
+    },
   },
 
   admin: {
@@ -142,6 +155,34 @@ export const api = {
       })
 
       return handleJsonResponse<AdminResetResponse>(response, 'Failed to reset board')
+    },
+  },
+
+  verify: {
+    ticketPurchase: async (
+      data: { txHash: string; sessionId: number },
+      options?: { accessToken?: string },
+    ): Promise<VerifyReceiptResponse> => {
+      const response = await fetch(`${API_BASE_URL}/verify/ticket-purchase`, {
+        method: 'POST',
+        headers: buildJsonHeaders(options?.accessToken),
+        body: JSON.stringify(data),
+      })
+
+      return handleJsonResponse<VerifyReceiptResponse>(response, 'Failed to verify ticket purchase')
+    },
+
+    prizeClaim: async (
+      data: { txHash: string; prizeId: string },
+      options?: { accessToken?: string },
+    ): Promise<VerifyReceiptResponse> => {
+      const response = await fetch(`${API_BASE_URL}/verify/prize-claim`, {
+        method: 'POST',
+        headers: buildJsonHeaders(options?.accessToken),
+        body: JSON.stringify(data),
+      })
+
+      return handleJsonResponse<VerifyReceiptResponse>(response, 'Failed to verify prize claim')
     },
   },
 }

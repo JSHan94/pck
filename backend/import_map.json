@@ -1,0 +1,6 @@
+{
+  "imports": {
+    "@pck/shared/": "../shared/src/",
+    "@pck/shared": "../shared/src/index.ts"
+  }
+}

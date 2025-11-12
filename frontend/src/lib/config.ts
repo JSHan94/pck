@@ -16,7 +16,7 @@ export const config = {
     anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY || '',
   },
   contract: {
-    address: import.meta.env.VITE_CONTRACT_ADDRESS as `0x${string}` || '0x0000000000000000000000000000000000000000',
+    address: (import.meta.env.VITE_CONTRACT_ADDRESS as `0x${string}`) || '0x0000000000000000000000000000000000000000',
   },
   chain: {
     id: Number(import.meta.env.VITE_CHAIN_ID) || 11155111, // Sepolia

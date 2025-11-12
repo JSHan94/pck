@@ -1,0 +1,30 @@
+project_id = "local"
+
+[api]
+port = 54321
+schemas = ["public", "storage", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+major_version = 2
+
+[db]
+port = 54322
+shadow_port = 54323
+major_version = 15
+
+[studio]
+port = 54323
+
+[inbucket]
+port = 54324
+
+[storage]
+port = 54326
+
+[postgres_meta]
+port = 54329
+
+[realtime]
+port = 54340
+
+[edge_runtime]
+port = 54321

@@ -177,7 +177,14 @@ cd backend && pnpm typecheck
 
 ### Frontend
 - Vercel 배포
-- 환경 변수: Supabase URL/Key, Contract 주소, Privy App ID
+- 환경 변수:
+  - `VITE_SUPABASE_URL`
+  - `VITE_SUPABASE_ANON_KEY`
+  - `VITE_PRIVY_APP_ID`
+  - `VITE_CHAIN_ID` (기본값 11155111)
+  - `VITE_RPC_URL`
+  - `VITE_CONTRACT_ADDRESS` *(Proof 단계에서 실제 주소 설정)*
+- 상세 절차: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
 
 ### Backend
 - Supabase Cloud

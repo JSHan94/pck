@@ -1,0 +1,15 @@
+{
+  "name": "backend",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@pck/shared": "workspace:*",
+    "@supabase/supabase-js": "^2.46.1",
+    "jose": "^5.9.6"
+  },
+  "scripts": {
+    "dev": "supabase start",
+    "deploy": "supabase functions deploy",
+    "typecheck": "deno check supabase/functions/**/*.ts"
+  }
+}

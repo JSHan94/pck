@@ -1,7 +1,5 @@
 import { TIER_DISTRIBUTION, hashLeaf } from '@pck/shared'
-import { MerkleTree } from 'merkletreejs'
-import { keccak256 } from 'viem'
-import { Buffer } from 'buffer'
+import { concatHex, keccak256 } from 'viem'
 
 interface Cell {
   cellId: number
@@ -27,25 +25,41 @@ function generateSalt(): string {
     .join('')
 }
 
-/**
- * Convert hex string to Uint8Array (browser-compatible)
- */
-function hexToUint8Array(hex: string): Uint8Array {
-  const cleanHex = hex.startsWith('0x') ? hex.slice(2) : hex
-  const bytes = new Uint8Array(cleanHex.length / 2)
-  for (let i = 0; i < bytes.length; i++) {
-    bytes[i] = parseInt(cleanHex.slice(i * 2, i * 2 + 2), 16)
+function buildMerkleLayers(leaves: `0x${string}`[]): `0x${string}`[][] {
+  const layers: `0x${string}`[][] = [leaves]
+
+  while (layers[layers.length - 1].length > 1) {
+    const previousLayer = layers[layers.length - 1]
+    const nextLayer: `0x${string}`[] = []
+
+    for (let i = 0; i < previousLayer.length; i += 2) {
+      const left = previousLayer[i]
+      const right = previousLayer[i + 1] ?? left
+      const [a, b] = [left, right].sort() as [`0x${string}`, `0x${string}`]
+      nextLayer.push(keccak256(concatHex([a, b])))
+    }
+
+    layers.push(nextLayer)
   }
-  return bytes
+
+  return layers
 }
 
-/**
- * Convert Uint8Array to hex string (browser-compatible)
- */
-function uint8ArrayToHex(bytes: Uint8Array): string {
-  return Array.from(bytes)
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('')
+function getProof(layers: `0x${string}`[][], index: number): `0x${string}`[] {
+  const proof: `0x${string}`[] = []
+
+  for (let level = 0; level < layers.length - 1; level++) {
+    const layer = layers[level]
+    const isRightNode = index % 2 === 1
+    const pairIndex = isRightNode ? index - 1 : index + 1
+    const sibling = layer[pairIndex]
+    if (sibling) {
+      proof.push(sibling)
+    }
+    index = Math.floor(index / 2)
+  }
+
+  return proof
 }
 
 /**
@@ -78,24 +92,13 @@ export function createBoard(): Board {
     cell.cellId = index
   })
 
-  // Create merkle tree
-  const leaves = cells.map((cell) => {
-    const hash = hashLeaf(cell.cellId, cell.tier, cell.salt)
-    return Buffer.from(hexToUint8Array(hash))
-  })
-
-  const hashFn = (data: Buffer): Buffer => {
-    const hash = keccak256(new Uint8Array(data))
-    return Buffer.from(hexToUint8Array(hash))
-  }
-
-  const tree = new MerkleTree(leaves, hashFn, { sortPairs: true })
-  const merkleRoot = '0x' + uint8ArrayToHex(tree.getRoot())
+  const leaves = cells.map((cell) => hashLeaf(cell.cellId, cell.tier, cell.salt) as `0x${string}`)
+  const layers = buildMerkleLayers(leaves)
+  const merkleRoot = layers[layers.length - 1][0]
   const proofs: Record<number, string[]> = {}
 
-  cells.forEach((cell, index) => {
-    const proofNodes = tree.getProof(leaves[index], index)
-    proofs[cell.cellId] = proofNodes.map((node) => '0x' + node.data.toString('hex'))
+  cells.forEach((cell) => {
+    proofs[cell.cellId] = getProof(layers, cell.cellId)
   })
 
   return {
