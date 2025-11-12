@@ -268,7 +268,7 @@ import type { StartSessionResponse } from '@pck/shared';
 - [x] Supabase 프로젝트 생성
 - [x] *(권장)* Supabase CLI 설치 및 로컬 개발 환경 설정 (`supabase init`)
 - [x] *(권장)* `docker-compose.yml`로 로컬 DB 환경 (`supabase start`)
-- [ ] B2 스키마를 GUI 또는 SQL 마이그레이션으로 실행
+- [x] B2 스키마를 GUI 또는 SQL 마이그레이션으로 실행
 
 ### 마일스톤 B2: 데이터베이스 스키마 설계 (PostgreSQL)
 - [x] **Board**: `boardId (PK)`, `prizeLayout (JSONB[{cellId,tier,salt}])`, `merkleRoot (text)`, `isAssigned (boolean, default: false)`
