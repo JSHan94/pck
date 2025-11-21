@@ -13,9 +13,7 @@ import {
   useClaimPrize,
   type TransactionStage,
 } from './hooks/useGameQueries'
-import { useWalletBalance } from './hooks/useWalletBalance'
 import { useAdminStatus, useAdminReset } from './hooks/useAdminTools'
-import { config } from './lib/config'
 import { BoardSection, type BoardOverlayState } from './components/dashboard/BoardSection'
 import { SessionPanel } from './components/dashboard/SessionPanel'
 import { TicketPanel } from './components/dashboard/TicketPanel'

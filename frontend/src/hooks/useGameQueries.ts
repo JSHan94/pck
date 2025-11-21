@@ -3,6 +3,7 @@ import { usePrivy, useWallets } from '@privy-io/react-auth'
 import { createPublicClient, createWalletClient, custom, http } from 'viem'
 import { api } from '../lib/api'
 import type { PullRequest } from '@pck/shared'
+import type { PrizeItem } from '../types/prize'
 import { config } from '../lib/config'
 import { getChainById } from '../lib/chains'
 import { gachaGameAbi } from '../data/gachaGameAbi'
@@ -81,7 +82,7 @@ export function usePrizes(enabled = true) {
   const { wallets } = useWallets()
   const address = wallets[0]?.address?.toLowerCase()
 
-  return useQuery({
+  return useQuery<PrizeItem[]>({
     queryKey: [...gameKeys.prizes(), address] as const,
     enabled: enabled && ready && authenticated && Boolean(address),
     queryFn: async () => {

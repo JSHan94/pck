@@ -10,6 +10,7 @@ import type {
   VerifyReceiptResponse,
   ClaimProofResponse,
 } from '@pck/shared'
+import type { PrizeItem } from '../types/prize'
 import { config } from './config'
 
 // Use Supabase Functions URL or fallback to /api during local development
@@ -129,11 +130,11 @@ export const api = {
       return handleJsonResponse<HintResponse>(response, 'Failed to fetch hint')
     },
 
-    getPrizes: async (options?: UserAddressOptions) => {
+    getPrizes: async (options?: UserAddressOptions): Promise<PrizeItem[]> => {
       const response = await fetch(`${API_BASE_URL}/game-prizes`, {
         headers: buildJsonHeaders(options),
       })
-      return handleJsonResponse(response, 'Failed to fetch prizes')
+      return handleJsonResponse<PrizeItem[]>(response, 'Failed to fetch prizes')
     },
 
     getClaimProof: async (

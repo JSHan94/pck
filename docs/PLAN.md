@@ -272,6 +272,11 @@ import type { StartSessionResponse } from '@pck/shared';
 - [x] 관련 문서(PLAN/TECHSPEC)에 새로운 인증 흐름 명시
 - [x] 개발용 MSW(mockServiceWorker) 및 핸들러 완전히 제거 (실제 백엔드와만 통신)
 
+### 마일스톤 F9: 프론트엔드 빌드 품질 개선
+- [ ] Privy 빌드 시 생성되는 `/*#__PURE__*/` Rollup 경고를 제거하거나 무시하도록 빌드 설정 개선
+- [ ] 번들 크기 경고 해소를 위해 vendor 청크 분리 또는 지연 로딩 적용 (chunkSizeWarningLimit 조정 포함)
+- [ ] 티켓/클레임 트랜잭션 토스트 메시지에 i18n 키/복구 버튼 추가 (취소·재시도 UX 보강)
+
 ---
 
 ## 4. 컴포넌트 2: 백엔드 (Supabase)
@@ -387,40 +392,40 @@ import type { StartSessionResponse } from '@pck/shared';
 *Shared/Backend/Frontend가 완전히 동작하고 배포된 뒤 마지막 단계에서 수행.*
 
 ### 마일스톤 C1: 기본 설정 및 역할 정의
-- [ ] Foundry 프로젝트 초기화
+- [x] Foundry 프로젝트 초기화
 - [ ] OpenZeppelin 설치 *(Ownable, ERC1155, `MerkleProof.sol`)*
 - [ ] ERC1155 상속 및 `constructor`(URI 설정)
-- [ ] 상태 변수: `owner`, `ticketPrice`
-- [ ] 상태 변수: `mapping(uint256 => bytes32) public gameMerkleRoot` *(sessionId → root)*
-- [ ] 상태 변수: `mapping(bytes32 => bool) public isPrizeClaimed` *(prizeId → claimed)*
-- [ ] 이벤트: `TicketPurchased(address indexed user, uint256 indexed sessionId, bytes32 merkleRoot)`
-- [ ] 이벤트: `PrizeClaimed(address indexed user, bytes32 indexed prizeId, uint256 prizeTier)`
+- [x] 상태 변수: `owner`, `ticketPrice`
+- [x] 상태 변수: `mapping(uint256 => bytes32) public gameMerkleRoot` *(sessionId → root)*
+- [x] 상태 변수: `mapping(bytes32 => bool) public isPrizeClaimed` *(prizeId → claimed)*
+- [x] 이벤트: `TicketPurchased(address indexed user, uint256 indexed sessionId, bytes32 merkleRoot)`
+- [x] 이벤트: `PrizeClaimed(address indexed user, bytes32 indexed prizeId, uint256 prizeTier)`
 
 ### 마일스톤 C2: 티켓 구매 로직 (Merkle Root 커밋)
-- [ ] `buyTicket(bytes32 _merkleRoot, uint256 _sessionId)` (public payable)
+- [x] `buyTicket(bytes32 _merkleRoot, uint256 _sessionId)` (public payable)
   - 참고: `_sessionId`는 백엔드(B4) **GameSession** PK(숫자) 사용
-- [ ] `require(msg.value == ticketPrice, "Incorrect ticket price")`
-- [ ] `require(gameMerkleRoot[_sessionId] == 0, "Session ID already used")`
-- [ ] `gameMerkleRoot[_sessionId] = _merkleRoot`
-- [ ] `emit TicketPurchased(msg.sender, _sessionId, _merkleRoot)`
+- [x] `require(msg.value == ticketPrice, "Incorrect ticket price")`
+- [x] `require(gameMerkleRoot[_sessionId] == 0, "Session ID already used")`
+- [x] `gameMerkleRoot[_sessionId] = _merkleRoot`
+- [x] `emit TicketPurchased(msg.sender, _sessionId, _merkleRoot)`
 
 ### 마일스톤 C3: 클레임 검증 및 실행 (Merkle Proof)
-- [ ] 리프 해시 로직 확정(백엔드 B3와 공유):  
+- [x] 리프 해시 로직 확정(백엔드 B3와 공유):  
   `bytes32 leaf = keccak256(abi.encodePacked(_cellId, _prizeTier, _salt));`
-- [ ] `claimPrize(uint256 _sessionId, bytes32[] calldata _merkleProof, bytes32 _prizeId, uint256 _prizeTier, uint8 _cellId, bytes32 _salt)`
-- [ ] `bytes32 userMerkleRoot = gameMerkleRoot[_sessionId]`
-- [ ] `require(userMerkleRoot != 0, "Invalid session")`
-- [ ] `require(!isPrizeClaimed[_prizeId], "Prize already claimed")`
-- [ ] `bytes32 leaf = keccak256(abi.encodePacked(_cellId, _prizeTier, _salt))`
-- [ ] `require(MerkleProof.verify(_merkleProof, userMerkleRoot, leaf), "Invalid proof")`
-- [ ] `isPrizeClaimed[_prizeId] = true`
-- [ ] 지급: `_mint(msg.sender, _prizeTier, 1, "")` *(tokenId = tier)*
-- [ ] `emit PrizeClaimed(msg.sender, _prizeId, _prizeTier)`
+- [x] `claimPrize(uint256 _sessionId, bytes32[] calldata _merkleProof, bytes32 _prizeId, uint256 _prizeTier, uint8 _cellId, bytes32 _salt)`
+- [x] `bytes32 userMerkleRoot = gameMerkleRoot[_sessionId]`
+- [x] `require(userMerkleRoot != 0, "Invalid session")`
+- [x] `require(!isPrizeClaimed[_prizeId], "Prize already claimed")`
+- [x] `bytes32 leaf = keccak256(abi.encodePacked(_cellId, _prizeTier, _salt))`
+- [x] `require(MerkleProof.verify(_merkleProof, userMerkleRoot, leaf), "Invalid proof")` *(내부 `_verifyProof`로 동등 검증)*
+- [x] `isPrizeClaimed[_prizeId] = true`
+- [x] 지급: `_mint(msg.sender, _prizeTier, 1, "")` *(tokenId = tier)*
+- [x] `emit PrizeClaimed(msg.sender, _prizeId, _prizeTier)`
 - [ ] (선택) `uri(uint256 tokenId)` 오버라이드 *(IPFS 등 동적 URI)*
 
 ### 마일스톤 C4: 어드민 함수 및 배포
-- [ ] `setTicketPrice(uint256 newPrice)` *(onlyOwner)*
-- [ ] `withdrawFunds(address payable to)` *(onlyOwner)*
+- [x] `setTicketPrice(uint256 newPrice)` *(onlyOwner)*
+- [x] `withdrawFunds(address payable to)` *(onlyOwner)*
 - [ ] `setURI(string memory newuri)` *(onlyOwner)*
 - [ ] Foundry 테스트 *(B3/B5 연동 시나리오 포함)*
 - [ ] 테스트넷(Sepolia 등) 배포

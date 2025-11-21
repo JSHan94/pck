@@ -1,6 +1,6 @@
 // Merkle utility functions
 import { keccak256, encodePacked, concatHex } from 'viem';
-import type { Cell } from '../types/database.ts';
+import type { Cell } from '../types/database.js';
 
 /**
  * Hash a leaf node for Merkle tree

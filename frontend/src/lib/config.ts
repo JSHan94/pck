@@ -12,11 +12,14 @@
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const
 
-const envContractAddress = import.meta.env.VITE_CONTRACT_ADDRESS as `0x${string}` | undefined
-const contractAddress: `0x${string}` =
-  envContractAddress && envContractAddress !== ''
-    ? envContractAddress
-    : ZERO_ADDRESS
+const envContractAddress = import.meta.env.VITE_CONTRACT_ADDRESS?.trim()
+const hasContractAddress =
+  Boolean(envContractAddress) &&
+  envContractAddress !== ZERO_ADDRESS &&
+  envContractAddress.startsWith('0x')
+const contractAddress: `0x${string}` = hasContractAddress && envContractAddress
+  ? (envContractAddress as `0x${string}`)
+  : ZERO_ADDRESS
 
 export const config = {
   supabase: {
@@ -25,7 +28,7 @@ export const config = {
   },
   contract: {
     address: contractAddress,
-    isConfigured: contractAddress !== ZERO_ADDRESS,
+    isConfigured: hasContractAddress,
   },
   chain: {
     id: Number(import.meta.env.VITE_CHAIN_ID) || 11155111, // Sepolia
