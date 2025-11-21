@@ -1,15 +1,21 @@
 {
-  "name": "backend",
+  "name": "@pck/backend",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
+  "description": "Supabase Edge Functions for the pck project",
+  "scripts": {
+    "typecheck": "echo \"Backend Edge Functions use Deno; configure checks per function.\"",
+    "deploy:functions": "tsx ./scripts/deploy-functions.ts",
+    "seed:dummy-board": "tsx ./scripts/seed-dummy-board.ts"
+  },
   "dependencies": {
     "@pck/shared": "workspace:*",
-    "@supabase/supabase-js": "^2.46.1",
-    "jose": "^5.9.6"
+    "@supabase/supabase-js": "^2.49.0",
+    "viem": "^2.9.7"
   },
-  "scripts": {
-    "dev": "supabase start",
-    "deploy": "supabase functions deploy",
-    "typecheck": "deno check supabase/functions/**/*.ts"
+  "devDependencies": {
+    "@types/node": "^22.13.1",
+    "tsx": "^4.19.2"
   }
 }

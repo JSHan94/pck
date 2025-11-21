@@ -1,6 +1,6 @@
 // Merkle utility tests
 import { describe, it, expect } from 'vitest';
-import { hashLeaf, verifyMerkleProof } from './merkle';
+import { hashLeaf, verifyMerkleProof, generateMerkleProof } from './merkle';
 import { concatHex, keccak256 } from 'viem';
 
 describe('hashLeaf', () => {
@@ -48,8 +48,8 @@ describe('verifyMerkleProof', () => {
   const saltA = '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
   const saltB = '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb';
 
-const leafA = hashLeaf(0, 1, saltA) as `0x${string}`;
-const leafB = hashLeaf(1, 2, saltB) as `0x${string}`;
+  const leafA = hashLeaf(0, 1, saltA) as `0x${string}`;
+  const leafB = hashLeaf(1, 2, saltB) as `0x${string}`;
 
   const hashPair = (left: `0x${string}`, right: `0x${string}`) => {
     const [a, b] = [left, right].sort();
@@ -68,5 +68,27 @@ const leafB = hashLeaf(1, 2, saltB) as `0x${string}`;
     const invalidProof = ['0x9999999999999999999999999999999999999999999999999999999999999999' as `0x${string}`];
 
     expect(verifyMerkleProof(leafA, invalidProof, root)).toBe(false);
+  });
+});
+
+describe('generateMerkleProof', () => {
+  const cells = [
+    { cellId: 0, tier: 4, salt: '0x' + 'aa'.repeat(32) },
+    { cellId: 1, tier: 5, salt: '0x' + 'bb'.repeat(32) },
+    { cellId: 2, tier: 6, salt: '0x' + 'cc'.repeat(32) },
+    { cellId: 3, tier: 3, salt: '0x' + 'dd'.repeat(32) },
+  ];
+
+  it('creates a proof that verifies against the generated root', () => {
+    const targetCell = cells[2];
+    const { proof, root } = generateMerkleProof(cells, targetCell.cellId);
+    const leaf = hashLeaf(targetCell.cellId, targetCell.tier, targetCell.salt) as `0x${string}`;
+
+    expect(proof.length).toBeGreaterThan(0);
+    expect(verifyMerkleProof(leaf, proof, root)).toBe(true);
+  });
+
+  it('throws when the requested cell does not exist', () => {
+    expect(() => generateMerkleProof(cells, 99)).toThrow('CELL_NOT_FOUND');
   });
 });

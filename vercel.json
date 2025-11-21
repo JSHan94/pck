@@ -3,8 +3,5 @@
   "framework": "vite",
   "buildCommand": "pnpm --filter shared build && pnpm --filter frontend build",
   "installCommand": "pnpm install",
-  "outputDirectory": "frontend/dist",
-  "env": {
-    "VITE_ENABLE_MSW": "false"
-  }
+  "outputDirectory": "frontend/dist"
 }

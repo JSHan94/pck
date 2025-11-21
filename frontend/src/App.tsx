@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { usePrivy, useWallets } from '@privy-io/react-auth'
 import { toast } from 'react-hot-toast'
-import { GRID_SIZE, TOTAL_CELLS, HINT_INTERVAL } from '@pck/shared'
-import { GameBoard } from './components/GameBoard'
+import { TOTAL_CELLS, HINT_INTERVAL } from '@pck/shared'
 import {
   useGameBoard,
   useUserState,
@@ -16,13 +15,15 @@ import {
 } from './hooks/useGameQueries'
 import { useWalletBalance } from './hooks/useWalletBalance'
 import { useAdminStatus, useAdminReset } from './hooks/useAdminTools'
+import { config } from './lib/config'
+import { BoardSection, type BoardOverlayState } from './components/dashboard/BoardSection'
+import { SessionPanel } from './components/dashboard/SessionPanel'
+import { TicketPanel } from './components/dashboard/TicketPanel'
+import { RewardsPanel } from './components/dashboard/RewardsPanel'
+import { ClaimModal } from './components/dashboard/ClaimModal'
+import { GlobalHeader, type NavItem } from './components/navigation/GlobalHeader'
 import styles from './App.module.css'
-
-type PrizeItem = {
-  prizeId: string
-  tier: number
-  isClaimed: boolean
-}
+import type { PrizeItem } from './types/prize'
 
 function App() {
   const { ready, authenticated, login, logout } = usePrivy()
@@ -30,9 +31,6 @@ function App() {
 
   const wallet = wallets[0]
   const address = wallet?.address
-
-  // Fetch wallet balance
-  const { data: balance } = useWalletBalance(address)
 
   // TanStack Query hooks
   const { data: boardData } = useGameBoard()
@@ -74,7 +72,7 @@ function App() {
     }
 
     if (!sessionId) {
-      toast.error('No active session found. Please start a new game before pulling cells.')
+      toast.error('No active run found. Please start a new game before pulling cells.')
       return
     }
 
@@ -98,7 +96,7 @@ function App() {
 
   const handleHint = async () => {
     if (!sessionId) {
-      toast.error('No active session found. Please start a new game before requesting hints.')
+      toast.error('No active run found. Please start a new game before requesting hints.')
       return
     }
 
@@ -121,7 +119,7 @@ function App() {
 
   const handleStartSession = async () => {
     if (!authenticated) {
-      toast.error('Connect your wallet to start a new session.')
+      toast.error('Connect your wallet to start a new run.')
       return
     }
 
@@ -146,12 +144,18 @@ function App() {
           }
         },
       })
-      toast.success(
-        `Ticket purchased for session #${result.sessionId}. Tx: ${result.txHash.slice(0, 10)}...`,
-        { id: toastId },
-      )
+      if (result.txHash) {
+        toast.success(
+          `Ticket purchased for run #${result.sessionId}. Tx: ${result.txHash.slice(0, 10)}...`,
+          { id: toastId },
+        )
+      } else {
+        toast.success(`Run #${result.sessionId} started in off-chain mode.`, {
+          id: toastId,
+        })
+      }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to start session', {
+      toast.error(error instanceof Error ? error.message : 'Failed to start run', {
         id: toastId,
       })
     }
@@ -195,9 +199,15 @@ function App() {
           if (message) updateToast(message)
         },
       })
-      toast.success(`Prize claimed successfully. Tx: ${result.txHash.slice(0, 10)}...`, {
-        id: toastId,
-      })
+      if (result.txHash) {
+        toast.success(`Prize claimed successfully. Tx: ${result.txHash.slice(0, 10)}...`, {
+          id: toastId,
+        })
+      } else {
+        toast.success('Prize marked as claimed in off-chain mode.', {
+          id: toastId,
+        })
+      }
       closeClaimModal()
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to claim prize.', {
@@ -206,185 +216,88 @@ function App() {
     }
   }
 
+  const isHintReady = Boolean(sessionId && pullCount > 0 && pullCount % HINT_INTERVAL === 0)
+  const hintProgress = pullCount % HINT_INTERVAL
+  const nextHintCount = !sessionId
+    ? HINT_INTERVAL
+    : pullCount === 0
+      ? HINT_INTERVAL
+      : hintProgress === 0
+        ? 0
+        : HINT_INTERVAL - hintProgress
+  const boardOverlayState: BoardOverlayState = !ready
+    ? 'loading'
+    : !authenticated
+      ? 'connect'
+      : !sessionId
+        ? 'start'
+        : null
+  const navItems: NavItem[] = [
+    { label: 'Board', href: '#board' },
+    { label: 'Rewards', href: '#rewards' },
+  ]
   return (
     <div className={styles.app}>
+      <div className={styles.glow} aria-hidden="true" />
+      <GlobalHeader
+        ready={ready}
+        authenticated={authenticated}
+        address={address}
+        onLogin={login}
+        onLogout={logout}
+        navItems={navItems}
+      />
       <div className={styles.container}>
-        {/* Header */}
-        <div className={styles.header}>
-          <h1 className={styles.title}>PCK Gacha dApp</h1>
+        <div className={styles.layout}>
+          <BoardSection
+            sectionId="board"
+            sessionId={sessionId}
+            revealedCells={revealedCells}
+            hintedCells={hintedCells}
+            loadingCellId={activeCellId}
+            onCellClick={handleCellClick}
+            boardOverlayState={boardOverlayState}
+            onConnect={login}
+            onStartSession={handleStartSession}
+            isPurchasing={startSession.isPending}
+            ready={ready}
+          />
 
-          {/* Login/Logout Button */}
-          {ready && (
-            <div className={styles.auth}>
-              {authenticated && address ? (
-                <>
-                  <div className={styles.walletInfo}>
-                    <p className={styles.walletLabel}>Connected Wallet:</p>
-                    <p className={styles.walletAddress}>{address.slice(0, 6)}...{address.slice(-4)}</p>
-                    {balance && (
-                      <p className={styles.walletBalance}>
-                        Balance: {parseFloat(balance).toFixed(4)} ETH
-                      </p>
-                    )}
-                  </div>
-                  <button
-                    onClick={logout}
-                    className={`${styles.button} ${styles.logoutButton}`}
-                  >
-                    Logout
-                  </button>
-                </>
-              ) : (
-                <button
-                  onClick={login}
-                  className={`${styles.button} ${styles.loginButton}`}
-                >
-                  Connect Wallet
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Game Info */}
-        <div className={styles.card}>
-          <h2 className={styles.cardTitle}>Game Information</h2>
-          <div className={styles.info}>
-            <p className={styles.infoText}>Grid Size: {GRID_SIZE}x{GRID_SIZE}</p>
-            <p className={styles.infoText}>Total Cells: {TOTAL_CELLS}</p>
-          </div>
-        </div>
-
-        {/* Game Board */}
-        {authenticated && (
-          <div className={styles.card}>
-            <div className={styles.boardHeader}>
-              <h2 className={styles.cardTitle}>Game Board</h2>
-              <div className={styles.boardControls}>
-                <button
-                  onClick={handleStartSession}
-                  disabled={!!sessionId || startSession.isPending}
-                  className={`${styles.button} ${styles.startButton}`}
-                >
-                  {sessionId ? 'Session Active' : startSession.isPending ? 'Purchasing...' : 'Start Game'}
-                </button>
-                <p className={styles.pullCount}>Pull Count: {pullCount}/{TOTAL_CELLS}</p>
-                <button
-                  onClick={handleHint}
-                  disabled={!sessionId || pullCount % HINT_INTERVAL !== 0 || pullCount === 0}
-                  className={styles.hintButton}
-                >
-                  Get Hint {pullCount % HINT_INTERVAL === 0 && pullCount > 0 ? '✨' : `(${HINT_INTERVAL - (pullCount % HINT_INTERVAL)})`}
-                </button>
-                {isAdmin && (
-                  <button
-                    onClick={handleForceReset}
-                    disabled={adminReset.isPending}
-                    className={`${styles.button} ${styles.adminButton}`}
-                  >
-                    {adminReset.isPending ? 'Resetting...' : 'Force Reset'}
-                  </button>
-                )}
-              </div>
-            </div>
-            <GameBoard
-              revealedCells={revealedCells}
-              hintedCells={hintedCells}
-              loadingCellId={activeCellId}
-              onCellClick={handleCellClick}
+          <aside className={styles.sidebar}>
+            <SessionPanel
+              sessionId={sessionId}
+              isPurchasing={startSession.isPending}
+              onStartSession={handleStartSession}
+              onHint={handleHint}
+              isHintReady={isHintReady}
+              nextHintCount={nextHintCount}
+              pullCount={pullCount}
+              totalCells={TOTAL_CELLS}
+              isAdmin={isAdmin}
+              onForceReset={handleForceReset}
+              isResetting={adminReset.isPending}
             />
-          </div>
-        )}
 
-        {authenticated && ticketPurchase && (
-          <div className={styles.card}>
-            <h2 className={styles.cardTitle}>Latest Ticket Purchase</h2>
-            <div className={styles.info}>
-              <p className={styles.infoText}>Session #{ticketPurchase.sessionId}</p>
-              <p className={styles.infoText}>
-                Tx Hash:{' '}
-                <span className={styles.walletAddress}>
-                  {ticketPurchase.txHash.slice(0, 10)}...{ticketPurchase.txHash.slice(-6)}
-                </span>
-              </p>
-              <button
-                onClick={handleCopyTxHash}
-                className={`${styles.button} ${styles.startButton}`}
-              >
-                Copy Tx Hash
-              </button>
-            </div>
-          </div>
-        )}
+            <TicketPanel ticketPurchase={ticketPurchase} onCopyTxHash={handleCopyTxHash} />
 
-        {authenticated && (
-          <div className={styles.card}>
-            <h2 className={styles.cardTitle}>Your Prizes</h2>
-            {prizes?.length ? (
-              <ul className={styles.prizeList}>
-                {prizes.map((prize: PrizeItem) => (
-                  <li key={prize.prizeId} className={styles.prizeItem}>
-                    <div>
-                      <p className={styles.prizeTitle}>Prize #{prize.prizeId.slice(0, 6)}</p>
-                      <p className={styles.prizeTier}>Tier {prize.tier}</p>
-                    </div>
-                    <span
-                      className={
-                        prize.isClaimed ? styles.prizeStatusClaimed : styles.prizeStatusUnclaimed
-                      }
-                    >
-                      {prize.isClaimed ? 'Claimed' : 'Unclaimed'}
-                    </span>
-                    {!prize.isClaimed && (
-                      <button
-                        onClick={() => openClaimModal(prize)}
-                        className={`${styles.button} ${styles.claimButton}`}
-                        disabled={claimPrize.isPending}
-                      >
-                        Claim
-                      </button>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className={styles.emptyState}>No prizes yet. Keep revealing cells!</p>
-            )}
-          </div>
-        )}
-      {isClaimModalOpen && selectedPrize && (
-        <div className={styles.modalOverlay} role="dialog" aria-modal="true">
-          <div className={styles.modal}>
-            <div className={styles.modalHeader}>
-              <h3 className={styles.modalTitle}>Claim Prize</h3>
-              <button className={styles.modalClose} onClick={closeClaimModal} aria-label="Close">
-                ×
-              </button>
-            </div>
-            <div className={styles.modalContent}>
-              <p className={styles.modalText}>
-                You are about to claim <strong>Prize #{selectedPrize.prizeId.slice(0, 6)}</strong>
-              </p>
-              <p className={styles.modalText}>Tier: {selectedPrize.tier}</p>
-              <p className={styles.modalHint}>Submitting will fetch your proof and send the claim transaction.</p>
-            </div>
-            <div className={styles.modalActions}>
-              <button className={styles.modalSecondary} onClick={closeClaimModal}>
-                Cancel
-              </button>
-              <button
-                className={`${styles.button} ${styles.startButton}`}
-                onClick={handleClaimPrize}
-                disabled={claimPrize.isPending}
-              >
-                {claimPrize.isPending ? 'Claiming...' : 'Confirm Claim'}
-              </button>
-            </div>
-          </div>
+            <RewardsPanel
+              sectionId="rewards"
+              prizes={prizes}
+              authenticated={authenticated}
+              onClaim={openClaimModal}
+              claimPending={claimPrize.isPending}
+            />
+          </aside>
         </div>
-      )}
-
       </div>
+
+      <ClaimModal
+        isOpen={isClaimModalOpen}
+        prize={selectedPrize}
+        onClose={closeClaimModal}
+        onConfirm={handleClaimPrize}
+        isPending={claimPrize.isPending}
+      />
     </div>
   )
 }

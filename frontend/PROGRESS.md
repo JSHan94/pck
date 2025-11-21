@@ -23,12 +23,12 @@
 - [x] Install and configure `@tanstack/react-query`
 - [x] Install and configure MSW (Mock Service Worker)
 - [x] Create mock handlers for:
-  - [x] `GET /api/game/start-session` → `{ merkleRoot, sessionId }`
-  - [x] `GET /api/game/board` → `{ boardId, revealedCells }`
-  - [x] `GET /api/game/user-state` → `{ pullCount }`
-  - [x] `POST /api/game/pull` → `{ tier }`
-  - [x] `GET /api/game/hint` → `{ tier4PlusCell, tier5PlusCell }`
-  - [x] `GET /api/game/prizes` → `[{ prizeId, tier, isClaimed }]`
+  - [x] `GET /api/game-start-session` → `{ merkleRoot, sessionId }`
+  - [x] `GET /api/game-board` → `{ boardId, revealedCells }`
+  - [x] `GET /api/game-user-state` → `{ pullCount }`
+  - [x] `POST /api/game-pull` → `{ tier }`
+  - [x] `GET /api/game-hint` → `{ tier4PlusCell, tier5PlusCell }`
+  - [x] `GET /api/game-prizes` → `[{ prizeId, tier, isClaimed }]`
 - [x] Create API client functions (`lib/api.ts`)
 - [x] Create custom hooks with TanStack Query (`hooks/useGameQueries.ts`)
 - [x] Integrate data fetching: `useGameBoard`, `useUserState`, `usePrizes`
@@ -71,9 +71,6 @@
     "react-dom": "^18.3.1",
     "viem": "^2.38.5"
   },
-  "devDependencies": {
-    "msw": "^2.11.6"
-  }
 }
 ```
 
@@ -84,9 +81,6 @@
 - `src/components/GameBoard.tsx` - 7x7 grid game board component
 - `src/components/Cell.tsx` - Individual cell component with tier colors
 - `src/hooks/useGameQueries.ts` - TanStack Query hooks for game API
-- `src/mocks/handlers.ts` - MSW request handlers
-- `src/mocks/browser.ts` - MSW worker setup
-- `public/mockServiceWorker.js` - MSW service worker (auto-generated)
 
 ## 🎯 Key Features Implemented
 
@@ -95,9 +89,8 @@
 3. **Cell States**: Unrevealed, revealed, and hinted states
 4. **Pull Mechanic**: Click cell to pull, shows tier
 5. **Hint System**: Every 3 pulls, hint button becomes available
-6. **Mock API**: Full MSW setup for development without backend
-7. **State Management**: TanStack Query for server state
-8. **Type Safety**: Full TypeScript integration with shared types
+6. **State Management**: TanStack Query for server state
+7. **Type Safety**: Full TypeScript integration with shared types
 
 ## 🔧 Configuration
 

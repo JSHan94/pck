@@ -1,5 +1,4 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { usePrivy } from '@privy-io/react-auth'
 import type { AdminCheckResponse } from '@pck/shared'
 import { api } from '../lib/api'
 import { gameKeys } from './useGameQueries'
@@ -9,22 +8,18 @@ const adminKeys = {
 }
 
 export function useAdminStatus(address?: string) {
-  const { getAccessToken } = usePrivy()
+  const normalized = address?.toLowerCase()
 
   return useQuery({
-    queryKey: adminKeys.status(address),
-    enabled: Boolean(address),
+    queryKey: adminKeys.status(normalized),
+    enabled: Boolean(normalized),
     queryFn: async (): Promise<AdminCheckResponse> => {
-      if (!address) {
+      if (!normalized) {
         return { isAdmin: false }
       }
 
       try {
-        const accessToken = await getAccessToken()
-        if (!accessToken) {
-          return { isAdmin: false }
-        }
-        return await api.admin.check({ accessToken })
+        return await api.admin.check({ userAddress: normalized })
       } catch (error) {
         console.warn('Failed to verify admin access', error)
         return { isAdmin: false }
@@ -36,21 +31,16 @@ export function useAdminStatus(address?: string) {
 }
 
 export function useAdminReset(address?: string) {
-  const { getAccessToken } = usePrivy()
   const queryClient = useQueryClient()
+  const normalized = address?.toLowerCase()
 
   return useMutation({
     mutationFn: async () => {
-      if (!address) {
+      if (!normalized) {
         throw new Error('Connect an admin wallet before resetting the board')
       }
 
-      const accessToken = await getAccessToken()
-      if (!accessToken) {
-        throw new Error('Please log in before resetting the board')
-      }
-
-      return api.admin.resetBoard({ accessToken })
+      return api.admin.resetBoard({ userAddress: normalized })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: gameKeys.board() })

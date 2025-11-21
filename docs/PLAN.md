@@ -71,31 +71,31 @@ pck/
 // frontend/src/api/game.ts
 import type { StartSessionResponse } from '@pck/shared';
 
-// backend/supabase/functions/start-session/index.ts
+// backend/functions/start-session/index.ts
 import type { StartSessionResponse } from '@pck/shared';
 ```
 
 ### 게임 메커니즘
 
 #### 보드 사전 생성 (Admin Only, Off-Chain)
-- 어드민이 `POST /api/admin/pre-generate-boards` 호출 (예: 100개).
+- 어드민이 `POST /api/admin-pre-generate-boards` 호출 (예: 100개).
 - 백엔드가 보드 100개(`prizeLayout`, `merkleRoot` 포함)를 생성하여 DB **Board** 테이블에 저장.
 
 #### 게임 시작 (Off-Chain + On-Chain)
-1. **(Off)** 프론트엔드가 백엔드 `GET /api/game/start-session` 호출.
+1. **(Off)** 프론트엔드가 백엔드 `GET /api/game-start-session` 호출.
 2. **(Off)** 백엔드가 **Board** 테이블에서 미사용 보드 1개를 랜덤 할당(`isAssigned=true`)하고, 해당 보드의 `merkleRoot` 및 새 `sessionId` 반환.
 3. **(On · Proof 단계 이후)** 프론트엔드가 `merkleRoot`와 `sessionId`를 인자로 `buyTicket()` 트랜잭션 호출 (컨트랙트는 `sessionId`와 `merkleRoot`를 매핑하여 저장).  
    → *오프체인 게임은 이 단계 없이도 완전히 동작하며, Proof 단계에서만 필요.*
 
 #### 게임 플레이 (Off-Chain)
-- 프론트엔드에서 셀 클릭 → 백엔드 `POST /api/game/pull` 호출.
+- 프론트엔드에서 셀 클릭 → 백엔드 `POST /api/game-pull` 호출.
 - 백엔드가 `tier` 반환 → 프론트엔드 UI 업데이트.
 
 #### 힌트 (Off-Chain)
-- 3회 뽑기마다 `GET /api/game/hint` 호출.
+- 3회 뽑기마다 `GET /api/game-hint` 호출.
 
 #### 상품 수령 (On-Chain · Proof 단계)
-1. 프론트엔드에서 백엔드 `GET /api/game/claim-proof` 호출 (수령할 `prizeId` 전달).
+1. 프론트엔드에서 백엔드 `GET /api/game-claim-proof` 호출 (수령할 `prizeId` 전달).
 2. 백엔드가 `(merkleProof, prizeId, prizeTier, cellId, salt)` 등 증명 데이터 반환.
 3. 프론트엔드가 이 증명으로 `claimPrize(proof, ...)` 함수 호출 → 상품(ERC1155) 수령 *(Proof 단계에서만 수행)*.
 
@@ -199,35 +199,36 @@ import type { StartSessionResponse } from '@pck/shared';
 
 ### 마일스톤 F3: 백엔드 연동 (Mock API)
 - [x] `react-query` 설정
-- [x] MSW(Mock Service Worker) 설치
-- [x] Mock: `GET /api/game/start-session` → `{ merkleRoot: "0x...", sessionId: 1 }`
-- [x] Mock: `GET /api/game/board` → `{ boardId: 1, revealedCells: [{ cellId: 5, tier: 6 }] }`
-- [x] Mock: `GET /api/game/user-state/:address` → `{ pullCount: 3 }`
-- [x] Mock: `POST /api/game/pull` → `{ tier: 4 }`
-- [x] Mock: `GET /api/game/hint` → `{ tier4PlusCell: 10, tier5PlusCell: 20 }`
-- [x] Mock: `GET /api/game/prizes/:address` → `[{ prizeId: "uuid-1", tier: 4, isClaimed: false }]`
-- [x] 데이터 페칭: `react-query`로 `GET /api/game/board`, `GET /api/game/user-state` 연동
+- [x] MSW(Mock Service Worker) 설치 *(후속 F8에서 제거됨)*
+- [x] Mock: `GET /api/game-start-session` → `{ merkleRoot: "0x...", sessionId: 1 }`
+- [x] Mock: `GET /api/game-board` → `{ boardId: 1, revealedCells: [{ cellId: 5, tier: 6 }] }`
+- [x] Mock: `GET /api/game-user-state/:address` → `{ pullCount: 3 }`
+- [x] Mock: `POST /api/game-pull` → `{ tier: 4 }`
+- [x] Mock: `GET /api/game-hint` → `{ tier4PlusCell: 10, tier5PlusCell: 20 }`
+- [x] Mock: `GET /api/game-prizes/:address` → `[{ prizeId: "uuid-1", tier: 4, isClaimed: false }]`
+- [x] 데이터 페칭: `react-query`로 `GET /api/game-board`, `GET /api/game-user-state` 연동
 - [x] `pullCount` UI 표시 *(예: “현재 3회 뽑음”)*
-- [x] ‘뽑기’ 핸들러: Cell 클릭 시 `POST /api/game/pull` 호출 *(useMutation)*
+- [x] ‘뽑기’ 핸들러: Cell 클릭 시 `POST /api/game-pull` 호출 *(useMutation)*
 - [x] 성공 시 UI 상태 업데이트 및 `user-state`, `board` 쿼리 무효화
 - [x] ‘힌트 받기’ 버튼: `pullCount` 기준 활성화
-- [x] 힌트 클릭 시: `GET /api/game/hint` 호출 및 `isHinted` 상태 업데이트
+- [x] 힌트 클릭 시: `GET /api/game-hint` 호출 및 `isHinted` 상태 업데이트
 
 ### 마일스톤 F4: 백엔드 연동 (Real API)
-- [x] MSW 핸들러 비활성화
+- [x] MSW 핸들러 비활성화 *(후속 F8에서 제거됨)*
 - [x] `react-query`의 API 기본 URL을 Supabase Function 주소로 변경
 - [x] 글로벌 에러 토스트 처리 *(errorBoundary 또는 onError)*
-- [x] 실제 연동: `GET /api/game/board`
-- [x] 실제 연동: `GET /api/game/user-state/:address`
-- [x] 실제 연동: `GET /api/game/prizes/:address`
-- [x] 실제 연동: `POST /api/game/pull` *(티켓 미구매 에러 처리 포함)*
-- [x] 실제 연동: `GET /api/game/hint`
+- [x] 실제 연동: `GET /api/game-board`
+- [x] 실제 연동: `GET /api/game-user-state/:address`
+- [x] 실제 연동: `GET /api/game-prizes/:address`
+- [x] 실제 연동: `POST /api/game-pull` *(티켓 미구매 에러 처리 포함)*
+- [x] 실제 연동: `GET /api/game-hint`
+- [x] Supabase Function 호출 시 `Authorization: Bearer <anonKey>` + `apikey` + `x-user-address` 헤더 적용 *(start-session, board, user-state, prizes)*
 
 ### 마일스톤 F5: 최종 마무리 및 배포 (오프체인 버전 완성)
 **목표**: 어드민 기능, 애니메이션 추가 및 최종 배포. 이 시점까지는 프론트+백엔드만으로 게임이 100% 동작해야 함.
 - [x] ‘강제 리셋’ 버튼(어드민): 백엔드 API 호출 시 `user.wallet.address`로 권한 확인  
   *(참고: v6 아키텍처에서는 ‘강제 리셋’ 대신 ‘새 보드 할당’일 수 있음. B3와 협의)*
-- [x] 리셋 클릭 시: `POST /api/admin/reset-board` 호출 및 모든 쿼리 무효화 *(B3의 pre-generate-boards와 동작 정의 필요)*
+- [x] 리셋 클릭 시: `POST /api/admin-reset-board` 호출 및 모든 쿼리 무효화 *(B3의 pre-generate-boards와 동작 정의 필요)*
 - [x] 애니메이션: 셀 클릭(뽑기) 로딩 → 응답 수신 → 셀 Flip 및 Tier 공개
 - [x] 반응형: 모바일 그리드/버튼 레이아웃 점검
 - [x] *(선택)* 클라이언트 사이드 merkleProof 검증 추가
@@ -239,36 +240,50 @@ import type { StartSessionResponse } from '@pck/shared';
 *이 마일스톤은 오프체인 버전이 배포·안정화된 뒤에만 진행한다.*
 - [x] 컨트랙트 ABI 및 배포 주소 환경 변수 설정
 - [x] '게임 시작(티켓 구매)' 버튼 UI
-- [x] (1단계) `GET /api/game/start-session` 호출로 Root 요청
+- [x] (1단계) `GET /api/game-start-session` 호출로 Root 요청
 - [x] (2단계) 백엔드로부터 `merkleRoot`, `sessionId` 수신
 - [x] (3단계) `buyTicket(_merkleRoot, _sessionId)` 트랜잭션 전송 *(Proof 단계에서 컨트랙트/백엔드 준비 후 진행)*
 - [x] (4단계) 트랜잭션 완료 후 `txHash` 획득 *(위 단계와 함께 처리)*
-- [x] (5단계) `POST /api/verify/ticket-purchase` ({txHash, sessionId}) 호출로 영수증 검증
+- [x] (5단계) `POST /api/verify-ticket-purchase` ({txHash, sessionId}) 호출로 영수증 검증
 - [x] 트랜잭션 로딩/성공/실패 모달(또는 토스트)
 - [x] 영수증 검증 성공 시 `user-state` 쿼리 무효화
-- [x] 획득한 상품 목록 UI (`GET /api/game/prizes` 연동)
+- [x] 획득한 상품 목록 UI (`GET /api/game-prizes` 연동)
 - [x] '상품 수령(Claim)' 버튼 및 상세 모달
-- [x] `handleClaim` (1) `GET /api/game/claim-proof?prizeId=...`
+- [x] `handleClaim` (1) `GET /api/game-claim-proof?prizeId=...`
 - [x] `handleClaim` (2) `(merkleProof, prizeId, prizeTier, cellId, salt)` 수신
 - [x] `handleClaim` (3) `claimPrize(_sessionId, _merkleProof, _prizeId, _prizeTier, _cellId, _salt)` 전송
 - [x] (4) 트랜잭션 완료 후 `txHash` 획득
-- [x] (5) `POST /api/verify/prize-claim` ({txHash, prizeId}) 호출로 영수증 검증
+- [x] (5) `POST /api/verify-prize-claim` ({txHash, prizeId}) 호출로 영수증 검증
 - [x] 클레임 트랜잭션 로딩/성공/실패 모달 처리
 - [x] 영수증 검증 성공 시 `prizes` 쿼리 무효화
+
+### 마일스톤 F7: 무컨트랙트 오프체인 모드
+**목표**: 컨트랙트 주소가 비어 있는 환경에서도 전체 게임을 오프체인으로 플레이하고 클레임까지 진행 가능하도록 프론트엔드를 보완한다.
+- [x] 환경 설정에 `contract.isConfigured` 플래그 추가 및 기본 zero-address 처리
+- [x] Start Session 훅/버튼: 컨트랙트 미설정 시 지갑 연결·트랜잭션 없이 오프체인 세션 시작
+- [x] Claim Prize 훅/버튼: 컨트랙트 미설정 시 지갑/트랜잭션/검증 생략 후 UI 상태 업데이트
+- [x] 오프체인 모드 사용자 안내(UI 메시지, 토스트) 및 트랜잭션 카드 표시 조건 보완
+
+### 마일스톤 F8: 월렛 주소 기반 인증 단순화
+**목표**: 데모 환경에서 Privy JWT 없이 지갑 주소만으로 사용자/어드민을 식별하고 모든 API 통신을 단순화한다.
+- [x] 프론트엔드 API 클라이언트가 `x-user-address` 헤더를 첨부하도록 수정
+- [x] React Query 훅/어드민 툴에서 Privy 토큰 의존성 제거 및 지갑 주소 기반으로 재구성
+- [x] 백엔드 `requireUser` 미들웨어를 지갑 주소 헤더 검증으로 대체
+- [x] 관련 문서(PLAN/TECHSPEC)에 새로운 인증 흐름 명시
+- [x] 개발용 MSW(mockServiceWorker) 및 핸들러 완전히 제거 (실제 백엔드와만 통신)
 
 ---
 
 ## 4. 컴포넌트 2: 백엔드 (Supabase)
 
-**목표**: 모든 오프체인 게임 로직(뽑기, 힌트)을 Supabase Edge Function으로 처리하고, 온체인 검증을 위한 Merkle Root/Proof 생성.
+**목표**: 모든 오프체인 게임 로직(뽑기, 힌트)을 Supabase Edge Function으로 처리하고, 온체인 검증을 위한 Merkle Root/Proof 생성.  
+모든 API는 Supabase Edge Function 규칙에 맞춰 `functions/v1/<function-name>` 형태의 플랫 경로를 사용한다.
 
 ### 마일스톤 B1: Supabase 설정 및 DB
 - [x] `backend/` 디렉토리에 Supabase 프로젝트 초기화
 - [x] `@pck/shared` 패키지 의존성 추가
 - [x] Supabase 프로젝트 생성
 - [x] *(권장)* Supabase CLI 설치 및 로컬 개발 환경 설정 (`supabase init`)
-- [x] *(권장)* `docker-compose.yml`로 로컬 DB 환경 (`supabase start`)
-- [x] B2 스키마를 GUI 또는 SQL 마이그레이션으로 실행
 
 ### 마일스톤 B2: 데이터베이스 스키마 설계 (PostgreSQL)
 - [x] **Board**: `boardId (PK)`, `prizeLayout (JSONB[{cellId,tier,salt}])`, `merkleRoot (text)`, `isAssigned (boolean, default: false)`
@@ -276,13 +291,13 @@ import type { StartSessionResponse } from '@pck/shared';
 - [x] **GameSession**: `sessionId (PK)`, `userAddress (FK)`, `boardId (FK)`, `pullCount`, `isActive (boolean, default: false)`
 - [x] **RevealedCell**: `id`, `sessionId (FK)`, `cellId`, `tier`
 - [x] **PrizeClaim**: `prizeId (PK, uuid)`, `userAddress (FK)`, `tier`, `isClaimed`, `sessionId (FK)`, `cellId`
-- [x] 마이그레이션 파일 생성 및 실행 (`supabase/migrations`)
+- [x] 마이그레이션 파일 생성 및 실행 (`backend/migrations`)
 - [x] *(선택)* Supabase TypeScript 타입 생성 및 `@pck/shared`와 동기화
 
 ### 마일스톤 B3: 핵심 게임 로직 (Edge Functions)
 - [x] Edge Functions (Deno/TS) 환경 설정
 - [x] `@pck/shared` 패키지 임포트 설정 (Deno import maps)
-- [ ] `keccak256`, `merkletreejs` 설치
+- [x] `keccak256`, `merkletreejs` 설치
 - [x] 어드민 인증 미들웨어 *(Supabase RLS/Policies 등)*
 - [x] `@pck/shared`에서 `hashLeaf` 유틸 임포트 사용 *(컨트랙트 C3의 keccak 로직과 1:1 매칭)*
 - [x] **createBoard** 유틸
@@ -291,35 +306,42 @@ import type { StartSessionResponse } from '@pck/shared';
   - [x] `prizeLayout` JSONB 작성
   - [x] 49개 리프 생성 → Merkle Tree → `merkleRoot` 계산
   - [x] `(prizeLayout, merkleRoot)` 반환
-- [x] **POST /api/admin/pre-generate-boards**
+- [x] **POST admin-pre-generate-boards**
   - [x] Body: `{ count: number }` (어드민 인증)
   - [x] `count` 횟수만큼 `createBoard` 실행
   - [x] Board 테이블에 일괄 삽입: `(prizeLayout, merkleRoot, isAssigned=false)`
-- [x] **GET /api/admin/check**: 어드민 여부 확인
+- [x] **GET admin-check**: 어드민 여부 확인
+- [x] Supabase Edge Functions 일괄 배포 스크립트 작성 (예: `pnpm --filter @pck/backend deploy:functions`)
 
 ### 마일스톤 B4: 게임 플레이 API (Edge Functions)
-- [x] 사용자 인증 미들웨어 *(Privy JWT 검증)*
-- [x] **GET /api/game/start-session**
+- [x] 사용자 인증 미들웨어 *(지갑 주소 `x-user-address` 헤더 검증)*
+- [x] Supabase Edge Functions 일괄 배포 스크립트 작성 (예: `pnpm --filter @pck/backend deploy:functions`)
+- [x] **GET game-start-session**
   - [x] *(DB 트랜잭션)* `isAssigned=false` 보드 1개 랜덤 조회
   - [x] 해당 `boardId`로 `isAssigned=true` 업데이트
   - [x] GameSession에 `(userAddress, boardId, isActive=false, pullCount=0)` 삽입 → `new_sessionId`
   - [x] 트랜잭션 커밋 → `(selected_board.merkleRoot, new_sessionId)` 반환
-- [x] **GET /api/game/board**: GameSession의 `RevealedCell` 목록 반환
-- [x] **GET /api/game/user-state/:address**: 현재 세션 기준 `pullCount` 반환
-- [ ] **GET /api/game/prizes/:address**: 미청구 `PrizeClaim` 목록 반환
-- [ ] **POST /api/game/pull** *(Body: `{ cellId, sessionId }`)*
-  - [ ] 인증 및 `sessionId` 소유권 확인
-  - [ ] `isActive` 확인 *(Proof 단계 이전에는 임시 플래그/always true 처리)*
-  - [ ] 중복 뽑기 방지
-  - [ ] `boardId` 조회 → Board.prizeLayout에서 `tier` 조회
-  - [ ] `RevealedCell` 기록, `pullCount` 증가, `PrizeClaim` 기록
-  - [ ] 결과 `tier` 반환
-- [ ] **GET /api/game/hint** *(Query: `sessionId`)*
-  - [ ] 소유권 및 `pullCount % 3 == 0` 검증
-  - [ ] Board.prizeLayout vs RevealedCell 비교 → T4+, T5+ 미공개 셀 ID 반환
+- [x] **GET game-board**: GameSession의 `RevealedCell` 목록 반환
+- [x] **GET game-user-state** *(Query: `address`)*: 현재 세션 기준 `pullCount` 반환
+- [x] **GET game-prizes** *(Query: `address`)*: 미청구 `PrizeClaim` 목록 반환
+- [x] **POST game-pull** *(Body: `{ cellId, sessionId }`)*
+  - [x] 인증 및 `sessionId` 소유권 확인
+  - [x] `isActive` 확인 *(Proof 단계 이전에는 임시 플래그/always true 처리)*
+  - [x] 중복 뽑기 방지
+  - [x] `boardId` 조회 → Board.prizeLayout에서 `tier` 조회
+  - [x] `RevealedCell` 기록, `pullCount` 증가, `PrizeClaim` 기록
+  - [x] 결과 `tier` 반환
+- [x] **GET game-hint** *(Query: `sessionId`)*
+  - [x] 소유권 및 `pullCount % 3 == 0` 검증
+  - [x] Board.prizeLayout vs RevealedCell 비교 → T4+, T5+ 미공개 셀 ID 반환
+- [x] **POST admin-reset-board**
+  - [x] 어드민 주소 검증 *(`x-user-address` 헤더 기반)*
+  - [x] 사용자 세션/보드 상태 초기화 로직 정의 *(GameSession, RevealedCell, PrizeClaim 정리)*
+  - [x] 미사용 보드 재할당 또는 새 보드 강제 생성 정책 반영
+  - [x] 성공/에러 응답 스펙 확정 *(프론트 강제 리셋 버튼과 연동)*
 
 ### 마일스톤 B5: 클레임(프루프) API
-- [ ] **GET /api/game/claim-proof** *(Query: `prizeId`)*
+- [ ] **GET game-claim-proof** *(Query: `prizeId`)*
   - [ ] 인증
   - [ ] PrizeClaim에서 `prizeId` 소유권, `isClaimed=false` 확인 및 `sessionId`, `cellId`, `tier` 조회
   - [ ] GameSession에서 `boardId` → Board에서 `prizeLayout`(salt 포함) 조회
@@ -330,9 +352,9 @@ import type { StartSessionResponse } from '@pck/shared';
 **목표**: 프론트엔드가 트랜잭션 완료 후 txHash를 전송하면, 백엔드가 영수증을 직접 조회하여 이벤트 검증.  
 *컨트랙트 배포 및 F6가 준비된 뒤에만 수행.*
 - [ ] viem 설정 및 RPC 클라이언트 구성
-- [ ] **POST /api/verify/ticket-purchase**
+- [ ] **POST verify-ticket-purchase**
   - [ ] Body: `{ txHash: string, sessionId: number }`
-  - [ ] Privy JWT 인증 및 사용자 주소 추출
+  - [ ] `x-user-address` 헤더 인증 및 사용자 주소 추출
   - [ ] viem으로 `txHash`의 영수증(receipt) 조회
   - [ ] 영수증의 `logs`에서 `TicketPurchased` 이벤트 검색:
     - [ ] 컨트랙트 주소 일치 확인
@@ -344,9 +366,9 @@ import type { StartSessionResponse } from '@pck/shared';
   - [ ] 검증 성공 시 GameSession `isActive=true` 설정
   - [ ] 응답: `{ success: true, isActive: true }`
   - [ ] 에러 처리: `INVALID_RECEIPT`, `EVENT_NOT_FOUND`, `VERIFICATION_FAILED`
-- [ ] **POST /api/verify/prize-claim**
+- [ ] **POST verify-prize-claim**
   - [ ] Body: `{ txHash: string, prizeId: string }`
-  - [ ] Privy JWT 인증 및 사용자 주소 추출
+  - [ ] `x-user-address` 헤더 인증 및 사용자 주소 추출
   - [ ] viem으로 `txHash`의 영수증(receipt) 조회
   - [ ] 영수증의 `logs`에서 `PrizeClaimed` 이벤트 검색:
     - [ ] 컨트랙트 주소 일치 확인

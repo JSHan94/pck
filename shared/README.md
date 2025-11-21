@@ -141,7 +141,7 @@ This package relies heavily on TypeScript for validation:
 import { StartSessionResponse, GRID_SIZE, TIER_DISTRIBUTION } from '@pck/shared';
 
 async function startGame() {
-  const response: StartSessionResponse = await api.get('/game/start-session');
+  const response: StartSessionResponse = await api.get('/game-start-session');
   console.log(`Grid size: ${GRID_SIZE}×${GRID_SIZE}`);
 }
 ```

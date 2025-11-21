@@ -11,17 +11,17 @@ import { buildBuyTicketCall, buildClaimPrizeCall } from '../lib/transactions'
 type StartSessionResult = {
   merkleRoot: string
   sessionId: number
-  txHash: `0x${string}`
+  txHash?: `0x${string}`
 }
 
-type TicketPurchaseRecord = {
+export type TicketPurchaseRecord = {
   sessionId: number
-  txHash: `0x${string}`
+  txHash?: `0x${string}`
 }
 
 type ClaimPrizeResult = {
   prizeId: string
-  txHash: `0x${string}`
+  txHash?: `0x${string}`
 }
 
 export type TransactionStage =
@@ -43,24 +43,53 @@ export const gameKeys = {
 }
 
 export function useGameBoard() {
+  const { ready, authenticated } = usePrivy()
+  const { wallets } = useWallets()
+  const address = wallets[0]?.address?.toLowerCase()
+
   return useQuery({
-    queryKey: gameKeys.board(),
-    queryFn: api.game.getBoard,
+    queryKey: [...gameKeys.board(), address] as const,
+    enabled: ready && authenticated && Boolean(address),
+    queryFn: async () => {
+      if (!address) {
+        throw new Error('Connect your wallet before viewing your board')
+      }
+      return api.game.getBoard({ userAddress: address })
+    },
   })
 }
 
 export function useUserState() {
+  const { ready, authenticated } = usePrivy()
+  const { wallets } = useWallets()
+  const address = wallets[0]?.address?.toLowerCase()
+
   return useQuery({
-    queryKey: gameKeys.userState(),
-    queryFn: api.game.getUserState,
+    queryKey: [...gameKeys.userState(), address] as const,
+    enabled: ready && authenticated && Boolean(address),
+    queryFn: async () => {
+      if (!address) {
+        throw new Error('Connect your wallet before loading your user state')
+      }
+      return api.game.getUserState({ userAddress: address })
+    },
   })
 }
 
 export function usePrizes(enabled = true) {
+  const { ready, authenticated } = usePrivy()
+  const { wallets } = useWallets()
+  const address = wallets[0]?.address?.toLowerCase()
+
   return useQuery({
-    queryKey: gameKeys.prizes(),
-    queryFn: api.game.getPrizes,
-    enabled,
+    queryKey: [...gameKeys.prizes(), address] as const,
+    enabled: enabled && ready && authenticated && Boolean(address),
+    queryFn: async () => {
+      if (!address) {
+        throw new Error('Connect your wallet before viewing your prizes')
+      }
+      return api.game.getPrizes({ userAddress: address })
+    },
   })
 }
 
@@ -76,15 +105,15 @@ export function useTicketPurchaseInfo() {
 
 export function usePull() {
   const queryClient = useQueryClient()
-  const { getAccessToken } = usePrivy()
+  const { wallets } = useWallets()
+  const address = wallets[0]?.address?.toLowerCase()
 
   return useMutation({
     mutationFn: async (data: PullRequest) => {
-      const accessToken = await getAccessToken()
-      if (!accessToken) {
-        throw new Error('Please log in before revealing cells')
+      if (!address) {
+        throw new Error('Connect your wallet before revealing cells')
       }
-      return api.game.pull(data, { accessToken })
+      return api.game.pull(data, { userAddress: address })
     },
     onSuccess: () => {
       // Invalidate and refetch board and user state
@@ -95,19 +124,19 @@ export function usePull() {
 }
 
 export function useHint(sessionId?: number) {
-  const { getAccessToken } = usePrivy()
+  const { wallets } = useWallets()
+  const address = wallets[0]?.address?.toLowerCase()
 
   return useQuery({
-    queryKey: [...gameKeys.all, 'hint', sessionId] as const,
+    queryKey: [...gameKeys.all, 'hint', sessionId, address] as const,
     queryFn: async () => {
       if (sessionId === undefined) {
         throw new Error('No active game session found. Please start a new game.')
       }
-      const accessToken = await getAccessToken()
-      if (!accessToken) {
-        throw new Error('Please log in before requesting hints')
+      if (!address) {
+        throw new Error('Connect your wallet before requesting hints')
       }
-      return api.game.getHint(sessionId, { accessToken })
+      return api.game.getHint(sessionId, { userAddress: address })
     },
     enabled: false, // Only fetch when manually triggered
   })
@@ -116,7 +145,7 @@ export function useHint(sessionId?: number) {
 export function useStartSession() {
   const queryClient = useQueryClient()
   const { wallets } = useWallets()
-  const { getAccessToken } = usePrivy()
+  const contractConfigured = config.contract.isConfigured
 
   return useMutation<StartSessionResult, Error, TransactionProgressOptions>({
     mutationFn: async (options) => {
@@ -125,20 +154,25 @@ export function useStartSession() {
         throw new Error('Connect your wallet before starting a session.')
       }
 
-      const contractAddress = config.contract.address
-      if (
-        !contractAddress ||
-        contractAddress === '0x0000000000000000000000000000000000000000'
-      ) {
-        throw new Error('Contract address is not configured.')
+      const userAddress = wallet.address?.toLowerCase()
+      if (!userAddress) {
+        throw new Error('Unable to determine your wallet address.')
       }
+
+      const { merkleRoot, sessionId } = await api.game.startSession({
+        userAddress,
+      })
+
+      if (!contractConfigured) {
+        return { merkleRoot, sessionId }
+      }
+
+      const contractAddress = config.contract.address
 
       const chain = getChainById(config.chain.id)
       if (wallet.chainId !== `eip155:${chain.id}`) {
         await wallet.switchChain(chain.id)
       }
-
-      const { merkleRoot, sessionId } = await api.game.startSession()
 
       const publicClient = createPublicClient({
         chain,
@@ -172,13 +206,11 @@ export function useStartSession() {
       options?.onProgress?.('awaiting_confirmation')
       await publicClient.waitForTransactionReceipt({ hash: txHash })
 
-      const accessToken = await getAccessToken()
-      if (!accessToken) {
-        throw new Error('Please log in before verifying your ticket purchase.')
-      }
-
       options?.onProgress?.('verifying')
-      await api.verify.ticketPurchase({ txHash, sessionId }, { accessToken })
+      await api.verify.ticketPurchase(
+        { txHash, sessionId },
+        { userAddress },
+      )
       options?.onProgress?.('success')
 
       return { merkleRoot, sessionId, txHash }
@@ -186,7 +218,11 @@ export function useStartSession() {
     onSuccess: ({ sessionId, txHash }) => {
       queryClient.invalidateQueries({ queryKey: gameKeys.board() })
       queryClient.invalidateQueries({ queryKey: gameKeys.userState() })
-      queryClient.setQueryData(gameKeys.ticketPurchase(), { sessionId, txHash })
+      if (txHash) {
+        queryClient.setQueryData(gameKeys.ticketPurchase(), { sessionId, txHash })
+      } else {
+        queryClient.setQueryData(gameKeys.ticketPurchase(), null)
+      }
     },
   })
 }
@@ -198,7 +234,7 @@ type ClaimPrizeVariables = {
 export function useClaimPrize() {
   const queryClient = useQueryClient()
   const { wallets } = useWallets()
-  const { getAccessToken } = usePrivy()
+  const contractConfigured = config.contract.isConfigured
 
   return useMutation<ClaimPrizeResult, Error, ClaimPrizeVariables>({
     mutationFn: async ({ prizeId, onProgress }) => {
@@ -207,20 +243,18 @@ export function useClaimPrize() {
         throw new Error('Connect your wallet before claiming prizes.')
       }
 
-      const accessToken = await getAccessToken()
-      if (!accessToken) {
-        throw new Error('Please log in before claiming prizes.')
+      const userAddress = wallet.address?.toLowerCase()
+      if (!userAddress) {
+        throw new Error('Unable to determine your wallet address.')
       }
 
-      const proof = await api.game.getClaimProof(prizeId, { accessToken })
+      if (!contractConfigured) {
+        return { prizeId }
+      }
+
+      const proof = await api.game.getClaimProof(prizeId, { userAddress })
 
       const contractAddress = config.contract.address
-      if (
-        !contractAddress ||
-        contractAddress === '0x0000000000000000000000000000000000000000'
-      ) {
-        throw new Error('Contract address is not configured.')
-      }
 
       const chain = getChainById(config.chain.id)
       if (wallet.chainId !== `eip155:${chain.id}`) {
@@ -260,14 +294,27 @@ export function useClaimPrize() {
       await publicClient.waitForTransactionReceipt({ hash: txHash })
 
       onProgress?.('verifying')
-      await api.verify.prizeClaim({ txHash, prizeId }, { accessToken })
+      await api.verify.prizeClaim({ txHash, prizeId }, { userAddress })
 
       onProgress?.('success')
 
       return { prizeId, txHash }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: gameKeys.prizes() })
+    onSuccess: (_, variables) => {
+      if (config.contract.isConfigured) {
+        queryClient.invalidateQueries({ queryKey: gameKeys.prizes() })
+        return
+      }
+
+      queryClient.setQueryData(
+        gameKeys.prizes(),
+        (previous: Array<{ prizeId: string }> | undefined) => {
+          if (!previous) {
+            return previous
+          }
+          return previous.filter((prize) => prize.prizeId !== variables.prizeId)
+        },
+      )
     },
   })
 }

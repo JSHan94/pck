@@ -5,6 +5,11 @@ export interface StartSessionResponse {
   sessionId: number;
 }
 
+export interface GameBoardResponse {
+  boardId: string;
+  revealedCells: Array<{ cellId: number; tier: number }>;
+}
+
 export interface PullRequest {
   cellId: number;
   sessionId: number;
@@ -30,6 +35,8 @@ export interface AdminCheckResponse {
 
 export interface AdminResetResponse {
   success: boolean;
+  resetSessionId?: number;
+  releasedBoardId?: string;
 }
 
 export interface ClaimProofResponse {

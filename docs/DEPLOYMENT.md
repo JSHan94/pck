@@ -23,7 +23,6 @@ Create the following variables in Vercel (Project Settings → Environment Varia
 | `VITE_CHAIN_ID` | Target chain ID (default: `11155111` for Sepolia) |
 | `VITE_CONTRACT_ADDRESS` | Leave as dummy for now (`0x000...000`) – real value added in Proof stage |
 | `VITE_RPC_URL` | RPC endpoint used by frontend utilities (also referenced by backend for parity) |
-| `VITE_ENABLE_MSW` | Set to `false` so production never boots the mock worker |
 
 > Tip: run `vercel env add` to enter each value via CLI, or upload a `.env` file with `vercel env pull/push`.
 
@@ -60,7 +59,7 @@ pnpm preview
 
 Visit `http://localhost:4173` and ensure:
 
-- Supabase endpoints respond correctly (MSW is disabled when `VITE_ENABLE_MSW=false`)
+- Supabase endpoints respond correctly
 - Privy login works with your configured redirect URI
 - Pulls, hints, prizes, and admin reset behave as expected
 
@@ -84,7 +83,6 @@ The first build may take longer because `pnpm install` happens at the root and c
 ## 7. Troubleshooting
 
 - **`AdminCheckResponse` or other shared types missing**: ensure `pnpm --filter shared build` completes before the frontend build; Vercel already does this, but local builds need the same sequence.
-- **MSW running in production**: confirm `VITE_ENABLE_MSW=false` exists in the Vercel environment (or rely on `vercel.json` default).
 - **Supabase CORS errors**: add the Vercel domain to Supabase → Authentication → URL configuration.
 - **Privy errors**: register the Vercel domain in Privy Dashboard → Allowed origins & redirect URIs.
 

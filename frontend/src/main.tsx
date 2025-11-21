@@ -32,61 +32,48 @@ const queryClient = new QueryClient({
   },
 })
 
-// Initialize MSW in development
-async function enableMocking() {
-  // Only enable MSW if in DEV mode AND not explicitly disabled
-  if (import.meta.env.DEV && import.meta.env.VITE_ENABLE_MSW !== 'false') {
-    const { worker } = await import('./mocks/browser')
-    return worker.start({
-      onUnhandledRequest: 'bypass',
-    })
-  }
-}
-
-enableMocking().then(() => {
-  createRoot(document.getElementById('root')!).render(
-    <StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <PrivyProvider
-          appId={config.privy.appId}
-          config={{
-            loginMethods: ['wallet', 'email', 'google'],
-            appearance: {
-              theme: 'light',
-              accentColor: '#676FFF',
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <PrivyProvider
+        appId={config.privy.appId}
+        config={{
+          loginMethods: ['wallet', 'email', 'google'],
+          appearance: {
+            theme: 'light',
+            accentColor: '#676FFF',
+          },
+          defaultChain: chain,
+          supportedChains: [chain],
+        }}
+      >
+        <App />
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            duration: 4000,
+            style: {
+              background: '#333',
+              color: '#fff',
             },
-            defaultChain: chain,
-            supportedChains: [chain],
+            success: {
+              duration: 3000,
+              iconTheme: {
+                primary: '#4ade80',
+                secondary: '#fff',
+              },
+            },
+            error: {
+              duration: 5000,
+              iconTheme: {
+                primary: '#ef4444',
+                secondary: '#fff',
+              },
+            },
           }}
-        >
-          <App />
-          <Toaster
-            position="top-right"
-            toastOptions={{
-              duration: 4000,
-              style: {
-                background: '#333',
-                color: '#fff',
-              },
-              success: {
-                duration: 3000,
-                iconTheme: {
-                  primary: '#4ade80',
-                  secondary: '#fff',
-                },
-              },
-              error: {
-                duration: 5000,
-                iconTheme: {
-                  primary: '#ef4444',
-                  secondary: '#fff',
-                },
-              },
-            }}
-          />
-        </PrivyProvider>
-        <ReactQueryDevtools initialIsOpen={false} />
-      </QueryClientProvider>
-    </StrictMode>,
-  )
-})
+        />
+      </PrivyProvider>
+      <ReactQueryDevtools initialIsOpen={false} />
+    </QueryClientProvider>
+  </StrictMode>,
+)

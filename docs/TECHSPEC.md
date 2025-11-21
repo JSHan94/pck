@@ -39,7 +39,7 @@
 +---------------------+      +-------------------------+      +------------------+
           |                            |                            |
           | 1. 로그인 (Privy)            |                            |
-          |--------------------------->| 2. 유저 인증 (Privy JWT)   |
+          |--------------------------->| 2. 지갑 주소 전달 (`x-user-address`) |
           | 3. 게임 시작 요청            |                            |
           |<---------------------------| 4. Merkle Root, SessionID |
           | 5. buyTicket(root, id)     |                            |
@@ -81,7 +81,7 @@
   - (사용자) start-session 시 보드 할당
   - (사용자) pull, hint 로직 수행
   - (사용자) claim-proof 요청 시 Merkle Proof 생성
-- **Auth**: Supabase RLS (어드민 인증), Privy JWT (사용자 인증)
+- **Auth**: Supabase RLS (어드민 인증), 지갑 주소 헤더(`x-user-address`) 기반 사용자 인증
 - **Event Listener**: Alchemy Notify 웹훅을 수신하여 GameSession 활성화 및 PrizeClaim 상태 업데이트
 
 ### 3.3. 컴포넌트 3: 스마트 컨트랙트 (Smart Contract)
@@ -293,7 +293,7 @@ export function hashLeaf(
 import type { StartSessionResponse, PullRequest } from '@pck/shared';
 import { TIER_DISTRIBUTION } from '@pck/shared';
 
-// backend/supabase/functions/start-session/index.ts
+// backend/functions/start-session/index.ts
 import type { StartSessionResponse } from '@pck/shared';
 import { hashLeaf } from '@pck/shared';
 ```
@@ -361,7 +361,7 @@ packages:
   "scripts": {
     "dev": "supabase start",
     "deploy": "supabase functions deploy",
-    "typecheck": "deno check supabase/functions/**/*.ts"
+    "typecheck": "deno check functions/**/*.ts"
   }
 }
 ```
@@ -450,14 +450,14 @@ packages:
 
 ### 7.1. 어드민 API (Admin)
 
-#### `POST /api/admin/pre-generate-boards`
+#### `POST /api/admin-pre-generate-boards`
 
 - **인증**: Supabase RLS (어드민 전용)
 - **Body**: `{ count: number }`
 - **기능**: count 개수만큼 보드(prizeLayout, merkleRoot)를 미리 생성하여 Board 테이블에 저장
 - **응답**: `{ success: true, generated: count }`
 
-#### `GET /api/admin/check`
+#### `GET /api/admin-check`
 
 - **인증**: Supabase RLS (어드민 전용)
 - **기능**: 요청자 어드민 여부 확인
@@ -465,50 +465,50 @@ packages:
 
 ### 7.2. 게임 플레이 API (Game)
 
-#### `GET /api/game/start-session`
+#### `GET /api/game-start-session`
 
-- **인증**: Privy JWT
+- **인증**: 지갑 주소 헤더(`x-user-address`)
 - **기능**: DB 트랜잭션 내에서 `SELECT ... FOR UPDATE SKIP LOCKED` 또는 원자적 `UPDATE ... RETURNING`을 사용해 경합 없이 미사용 보드 1개를 안전 할당 후 `isAssigned=true`로 업데이트, GameSession 생성
 - **응답**: `{ merkleRoot: string, sessionId: number }`
 - **에러**: `NO_AVAILABLE_BOARDS` (모든 보드 소진)
 
-#### `GET /api/game/board`
+#### `GET /api/game-board`
 
-- **인증**: Privy JWT
-- **기능**: 현재 사용자의 활성 GameSession에 연결된 RevealedCell 목록 조회 (JWT에서 주소 추출)
+- **인증**: 지갑 주소 헤더(`x-user-address`)
+- **기능**: 현재 사용자의 활성 GameSession에 연결된 RevealedCell 목록 조회 (헤더에서 주소 추출)
 - **응답**: `{ boardId: number, revealedCells: [{ cellId: number, tier: number }] }`
 
-#### `GET /api/game/user-state`
+#### `GET /api/game-user-state`
 
-- **인증**: Privy JWT (JWT에서 사용자 주소 추출)
+- **인증**: 지갑 주소 헤더(`x-user-address`)
 - **기능**: 현재 GameSession의 pullCount 조회
 - **응답**: `{ pullCount: number }`
 
-#### `GET /api/game/prizes`
+#### `GET /api/game-prizes`
 
-- **인증**: Privy JWT (JWT에서 사용자 주소 추출)
+- **인증**: 지갑 주소 헤더(`x-user-address`)
 - **기능**: 미청구(`isClaimed=false`) 상품 목록 조회
 - **응답**: `[{ prizeId: string, tier: number, isClaimed: false }]`
 
-#### `POST /api/game/pull`
+#### `POST /api/game-pull`
 
-- **인증**: Privy JWT
+- **인증**: 지갑 주소 헤더(`x-user-address`)
 - **Body**: `{ cellId: number, sessionId: number }`
 - **기능**: GameSession 활성 상태 검증, 중복 뽑기 검증 후 뽑기 실행. RevealedCell, GameSession(pullCount), PrizeClaim 레코드 삽입
 - **응답**: `{ tier: number }`
 - **에러**: `SESSION_NOT_ACTIVE`, `ALREADY_REVEALED`, `BOARD_COMPLETED` (pullCount >= 49)
 
-#### `GET /api/game/hint`
+#### `GET /api/game-hint`
 
-- **인증**: Privy JWT
+- **인증**: 지갑 주소 헤더(`x-user-address`)
 - **Query**: `sessionId: number`
 - **기능**: `pullCount % 3 == 0` 검증 후, 미공개/미클레임 T4+, T5+ 셀 ID 반환 (주의: salt는 반환 금지)
 - **응답**: `{ tier4PlusCell: number, tier5PlusCell: number }`
 - **에러**: `HINT_NOT_AVAILABLE`
 
-#### `GET /api/game/claim-proof`
+#### `GET /api/game-claim-proof`
 
-- **인증**: Privy JWT
+- **인증**: 지갑 주소 헤더(`x-user-address`)
 - **Query**: `prizeId: string`
 - **기능**: prizeId 소유권 검증 후, Board.prizeLayout 기반 Merkle Tree 재생성 → merkleProof 반환
 - **응답**: `{ merkleProof: string[], prizeId: string, prizeTier: number, cellId: number, salt: string, sessionId: number }`
@@ -516,37 +516,38 @@ packages:
 
 ### 7.3. 영수증 검증 API (Receipt Verification)
 
-#### `POST /api/verify/ticket-purchase`
+#### `POST /api/verify-ticket-purchase`
 
-- **인증**: Privy JWT
+- **인증**: 지갑 주소 헤더(`x-user-address`)
 - **Body**: `{ txHash: string, sessionId: number }`
 - **기능**:
   - viem을 사용하여 트랜잭션 영수증(receipt) 조회
   - 영수증의 로그에서 `TicketPurchased` 이벤트 검증:
     - 이벤트가 우리 컨트랙트에서 발생했는지 확인
     - `sessionId`가 일치하는지 확인
-    - `user` 주소가 JWT의 주소와 일치하는지 확인
+    - `user` 주소가 요청 헤더의 주소와 일치하는지 확인
   - 검증 성공 시 `GameSession.isActive=true` 업데이트
 - **응답**: `{ success: true, isActive: true }`
 - **에러**: `INVALID_RECEIPT`, `EVENT_NOT_FOUND`, `VERIFICATION_FAILED`
 
-#### `POST /api/verify/prize-claim`
+#### `POST /api/verify-prize-claim`
 
-- **인증**: Privy JWT
+- **인증**: 지갑 주소 헤더(`x-user-address`)
 - **Body**: `{ txHash: string, prizeId: string }`
 - **기능**:
   - viem을 사용하여 트랜잭션 영수증(receipt) 조회
   - 영수증의 로그에서 `PrizeClaimed` 이벤트 검증:
     - 이벤트가 우리 컨트랙트에서 발생했는지 확인
     - `prizeId`가 일치하는지 확인
-    - `user` 주소가 JWT의 주소와 일치하는지 확인
+    - `user` 주소가 요청 헤더의 주소와 일치하는지 확인
   - 검증 성공 시 `PrizeClaim.isClaimed=true` 업데이트
 - **응답**: `{ success: true, isClaimed: true }`
 - **에러**: `INVALID_RECEIPT`, `EVENT_NOT_FOUND`, `VERIFICATION_FAILED`
 
 ### 7.4. API 공통 사항 (Common)
 
-**Rate Limiting**: 모든 사용자 API(특히 pull, hint, claim-proof)는 IP 및 지갑 주소(JWT) 기준 레이트리밋(예: 토큰 버킷) 적용
+**Rate Limiting**: 모든 사용자 API(특히 pull, hint, claim-proof)는 IP 및 지갑 주소(`x-user-address`) 기준 레이트리밋(예: 토큰 버킷) 적용
+- **헤더 규칙**: 클라이언트는 Supabase Functions 호출 시 `Authorization: Bearer <anonKey>`와 `apikey: <anonKey>`를 모두 포함하고, 사용자를 식별하기 위한 `x-user-address`를 함께 전송한다.
 
 ---
 
@@ -615,7 +616,7 @@ function uri(uint256 _tokenId) public view override returns (string memory);
 
 ### 9.1. 관리자 – 보드 생성 (B3)
 
-1. 어드민이 `POST /api/admin/pre-generate-boards` (예: 100개) 호출
+1. 어드민이 `POST /api/admin-pre-generate-boards` (예: 100개) 호출
 2. 백엔드가 100개 보드(prizeLayout, merkleRoot) 생성
 3. Board 테이블에 `isAssigned=false`, `merkleRoot (UNIQUE)`로 저장
 
@@ -623,7 +624,7 @@ function uri(uint256 _tokenId) public view override returns (string memory);
 
 #### 세션 시작 및 보드 할당
 
-1. **(F)** '게임 시작' 클릭 → `GET /api/game/start-session`
+1. **(F)** '게임 시작' 클릭 → `GET /api/game-start-session`
 2. **(B)** 미사용 보드 1개 안전 할당(원자 쿼리), GameSession 생성 (boardId UNIQUE)
 3. **(B)** `{merkleRoot, sessionId}` 반환
 
@@ -635,7 +636,7 @@ function uri(uint256 _tokenId) public view override returns (string memory);
 #### 영수증 검증 (오프체인)
 
 6. **(F)** 트랜잭션 완료 후 `txHash` 획득
-7. **(F)** `POST /api/verify/ticket-purchase` ({txHash, sessionId}) 호출
+7. **(F)** `POST /api/verify-ticket-purchase` ({txHash, sessionId}) 호출
 8. **(B)** viem으로 영수증 조회 및 `TicketPurchased` 이벤트 검증:
    - 컨트랙트 주소 확인
    - sessionId 일치 확인
@@ -645,7 +646,7 @@ function uri(uint256 _tokenId) public view override returns (string memory);
 
 ### 9.3. 사용자 – 뽑기 (B4)
 
-1. **(F)** 셀 클릭 → `POST /api/game/pull` ({cellId, sessionId})
+1. **(F)** 셀 클릭 → `POST /api/game-pull` ({cellId, sessionId})
 2. **(B)** `isActive` 검증 → Board.prizeLayout에서 tier 조회
 3. **(B)** RevealedCell, PrizeClaim, pullCount 업데이트
 4. **(B)** `{tier}` 반환 → **(F)** UI Flip 애니메이션
@@ -655,7 +656,7 @@ function uri(uint256 _tokenId) public view override returns (string memory);
 #### 클레임 프루프 요청
 
 1. **(F)** '클레임' 클릭 (예: `prizeId="uuid-123"`)
-2. **(F)** `GET /api/game/claim-proof?prizeId=uuid-123`
+2. **(F)** `GET /api/game-claim-proof?prizeId=uuid-123`
 3. **(B)** 소유권 검증 → Merkle Tree 재생성 → merkleProof 생성
 4. **(B)** 프루프 반환
 
@@ -670,7 +671,7 @@ function uri(uint256 _tokenId) public view override returns (string memory);
 #### 영수증 검증
 
 10. **(F)** 트랜잭션 완료 후 `txHash` 획득
-11. **(F)** `POST /api/verify/prize-claim` ({txHash, prizeId}) 호출
+11. **(F)** `POST /api/verify-prize-claim` ({txHash, prizeId}) 호출
 12. **(B)** viem으로 영수증 조회 및 `PrizeClaimed` 이벤트 검증:
     - 컨트랙트 주소 확인
     - prizeId 일치 확인
@@ -688,8 +689,8 @@ function uri(uint256 _tokenId) public view override returns (string memory);
 
 ### 10.2. 사용자 인증
 
-- **API 인증**: 모든 API는 Privy JWT로 인증 (IDOR 방지)
-- **JWT 주소 추출**: JWT에서 사용자 주소를 추출하여 소유권 검증
+- **API 인증**: 모든 API는 지갑 주소 헤더(`x-user-address`)로 사용자 식별 (IDOR 방지)
+- **주소 검증**: 헤더의 주소를 소문자로 정규화하여 소유권 검증
 
 ### 10.3. 어드민 인증
 
@@ -715,7 +716,7 @@ function uri(uint256 _tokenId) public view override returns (string memory);
 - **다중 검증**:
   - 컨트랙트 주소 일치 확인
   - 이벤트 파라미터 일치 확인 (sessionId, prizeId 등)
-  - 사용자 주소 일치 확인 (JWT vs 이벤트)
+  - 사용자 주소 일치 확인 (`x-user-address` 헤더 vs 이벤트)
 - **프론트엔드 신뢰 배제**: 프론트엔드가 보낸 값은 신뢰하지 않고, 영수증 로그만 검증
 
 ---
@@ -745,7 +746,7 @@ function uri(uint256 _tokenId) public view override returns (string memory);
 
 - **react-query 훅**: 상태 관리 및 서버 상태 동기화
 - **Jotai 상태 변경**: 전역 상태 관리
-- **MSW 기반 API Mocking**: API 모킹 및 테스트
+- **실제 API 연동**: 개발 환경에서도 Supabase Functions를 직접 호출 (MSW 제거)
 - **react-spring 애니메이션**: 애니메이션 렌더링
 - **Privy useSendTransaction**: 로딩/성공/실패 처리
 - **영수증 푸시 플로우**: 트랜잭션 → 영수증 획득 → API 호출 시퀀스
@@ -768,7 +769,6 @@ function uri(uint256 _tokenId) public view override returns (string memory);
 - **필요 환경 변수**:
   - RPC URL (viem용)
   - 컨트랙트 주소
-  - Privy App Secret (JWT 검증용)
 
 ### 12.3. 프론트엔드
 

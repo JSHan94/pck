@@ -1,5 +1,6 @@
 import type {
   StartSessionResponse,
+  GameBoardResponse,
   PullRequest,
   PullResponse,
   HintResponse,
@@ -11,7 +12,7 @@ import type {
 } from '@pck/shared'
 import { config } from './config'
 
-// Use Supabase Functions URL or fallback to /api for MSW
+// Use Supabase Functions URL or fallback to /api during local development
 const API_BASE_URL = config.supabase.url
   ? `${config.supabase.url}/functions/v1`
   : '/api'
@@ -20,6 +21,10 @@ type ApiErrorResponse = {
   error?: string
   code?: string
   message?: string
+}
+
+type UserAddressOptions = {
+  userAddress?: string
 }
 
 const API_ERROR_MESSAGES: Record<string, string> = {
@@ -33,17 +38,18 @@ const API_ERROR_MESSAGES: Record<string, string> = {
   HINT_NOT_AVAILABLE: 'Hints unlock every 3 pulls. Keep playing to reveal one.',
 }
 
-function buildJsonHeaders(accessToken?: string): HeadersInit {
+function buildJsonHeaders(options?: UserAddressOptions): HeadersInit {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   }
 
   if (config.supabase.anonKey) {
     headers.apikey = config.supabase.anonKey
+    headers.Authorization = `Bearer ${config.supabase.anonKey}`
   }
 
-  if (accessToken) {
-    headers.Authorization = `Bearer ${accessToken}`
+  if (options?.userAddress) {
+    headers['x-user-address'] = options.userAddress.toLowerCase()
   }
 
   return headers
@@ -84,54 +90,58 @@ function getErrorMessage(errorBody: ApiErrorResponse): string | undefined {
 
 export const api = {
   game: {
-    startSession: async (): Promise<StartSessionResponse> => {
-      const response = await fetch(`${API_BASE_URL}/game/start-session`)
-      if (!response.ok) throw new Error('Failed to start session')
-      return response.json()
+    startSession: async (options?: UserAddressOptions): Promise<StartSessionResponse> => {
+      const response = await fetch(`${API_BASE_URL}/game-start-session`, {
+        headers: buildJsonHeaders(options),
+      })
+      return handleJsonResponse<StartSessionResponse>(response, 'Failed to start session')
     },
 
-    getBoard: async () => {
-      const response = await fetch(`${API_BASE_URL}/game/board`)
-      if (!response.ok) throw new Error('Failed to fetch board')
-      return response.json()
+    getBoard: async (options?: UserAddressOptions): Promise<GameBoardResponse> => {
+      const response = await fetch(`${API_BASE_URL}/game-board`, {
+        headers: buildJsonHeaders(options),
+      })
+      return handleJsonResponse<GameBoardResponse>(response, 'Failed to fetch board')
     },
 
-    getUserState: async (): Promise<UserStateResponse> => {
-      const response = await fetch(`${API_BASE_URL}/game/user-state`)
-      if (!response.ok) throw new Error('Failed to fetch user state')
-      return response.json()
+    getUserState: async (options?: UserAddressOptions): Promise<UserStateResponse> => {
+      const response = await fetch(`${API_BASE_URL}/game-user-state`, {
+        headers: buildJsonHeaders(options),
+      })
+      return handleJsonResponse(response, 'Failed to fetch user state')
     },
 
-    pull: async (data: PullRequest, options?: { accessToken?: string }): Promise<PullResponse> => {
-      const response = await fetch(`${API_BASE_URL}/game/pull`, {
+    pull: async (data: PullRequest, options?: UserAddressOptions): Promise<PullResponse> => {
+      const response = await fetch(`${API_BASE_URL}/game-pull`, {
         method: 'POST',
-        headers: buildJsonHeaders(options?.accessToken),
+        headers: buildJsonHeaders(options),
         body: JSON.stringify(data),
       })
 
       return handleJsonResponse<PullResponse>(response, 'Failed to reveal the cell')
     },
 
-    getHint: async (sessionId: number, options?: { accessToken?: string }): Promise<HintResponse> => {
-      const response = await fetch(`${API_BASE_URL}/game/hint?sessionId=${sessionId}`, {
-        headers: buildJsonHeaders(options?.accessToken),
+    getHint: async (sessionId: number, options?: UserAddressOptions): Promise<HintResponse> => {
+      const response = await fetch(`${API_BASE_URL}/game-hint?sessionId=${sessionId}`, {
+        headers: buildJsonHeaders(options),
       })
 
       return handleJsonResponse<HintResponse>(response, 'Failed to fetch hint')
     },
 
-    getPrizes: async () => {
-      const response = await fetch(`${API_BASE_URL}/game/prizes`)
-      if (!response.ok) throw new Error('Failed to fetch prizes')
-      return response.json()
+    getPrizes: async (options?: UserAddressOptions) => {
+      const response = await fetch(`${API_BASE_URL}/game-prizes`, {
+        headers: buildJsonHeaders(options),
+      })
+      return handleJsonResponse(response, 'Failed to fetch prizes')
     },
 
     getClaimProof: async (
       prizeId: string,
-      options?: { accessToken?: string },
+      options?: UserAddressOptions,
     ): Promise<ClaimProofResponse> => {
-      const response = await fetch(`${API_BASE_URL}/game/claim-proof?prizeId=${encodeURIComponent(prizeId)}`, {
-        headers: buildJsonHeaders(options?.accessToken),
+      const response = await fetch(`${API_BASE_URL}/game-claim-proof?prizeId=${encodeURIComponent(prizeId)}`, {
+        headers: buildJsonHeaders(options),
       })
 
       return handleJsonResponse<ClaimProofResponse>(response, 'Failed to fetch claim proof')
@@ -139,18 +149,18 @@ export const api = {
   },
 
   admin: {
-    check: async (options?: { accessToken?: string }): Promise<AdminCheckResponse> => {
-      const response = await fetch(`${API_BASE_URL}/admin/check`, {
-        headers: buildJsonHeaders(options?.accessToken),
+    check: async (options?: UserAddressOptions): Promise<AdminCheckResponse> => {
+      const response = await fetch(`${API_BASE_URL}/admin-check`, {
+        headers: buildJsonHeaders(options),
       })
 
       return handleJsonResponse<AdminCheckResponse>(response, 'Failed to verify admin access')
     },
 
-    resetBoard: async (options?: { accessToken?: string }): Promise<AdminResetResponse> => {
-      const response = await fetch(`${API_BASE_URL}/admin/reset-board`, {
+    resetBoard: async (options?: UserAddressOptions): Promise<AdminResetResponse> => {
+      const response = await fetch(`${API_BASE_URL}/admin-reset-board`, {
         method: 'POST',
-        headers: buildJsonHeaders(options?.accessToken),
+        headers: buildJsonHeaders(options),
         body: JSON.stringify({}),
       })
 
@@ -161,11 +171,11 @@ export const api = {
   verify: {
     ticketPurchase: async (
       data: { txHash: string; sessionId: number },
-      options?: { accessToken?: string },
+      options?: UserAddressOptions,
     ): Promise<VerifyReceiptResponse> => {
-      const response = await fetch(`${API_BASE_URL}/verify/ticket-purchase`, {
+      const response = await fetch(`${API_BASE_URL}/verify-ticket-purchase`, {
         method: 'POST',
-        headers: buildJsonHeaders(options?.accessToken),
+        headers: buildJsonHeaders(options),
         body: JSON.stringify(data),
       })
 
@@ -174,11 +184,11 @@ export const api = {
 
     prizeClaim: async (
       data: { txHash: string; prizeId: string },
-      options?: { accessToken?: string },
+      options?: UserAddressOptions,
     ): Promise<VerifyReceiptResponse> => {
-      const response = await fetch(`${API_BASE_URL}/verify/prize-claim`, {
+      const response = await fetch(`${API_BASE_URL}/verify-prize-claim`, {
         method: 'POST',
-        headers: buildJsonHeaders(options?.accessToken),
+        headers: buildJsonHeaders(options),
         body: JSON.stringify(data),
       })
 

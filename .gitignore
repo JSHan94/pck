@@ -22,6 +22,8 @@ out/
 .env.production.local
 
 .vite/
+.pnpm-store/
+.claude/
 
 # IDE
 .vscode/

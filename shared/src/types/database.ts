@@ -1,4 +1,4 @@
-// Supabase Database schema (mirrors backend/supabase/migrations)
+// Supabase Database schema (mirrors backend/migrations)
 
 export type Json =
   | string

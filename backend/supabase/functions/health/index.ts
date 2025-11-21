@@ -1,7 +1,22 @@
-import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
-import { GRID_SIZE } from '@pck/shared'
-import { json } from '../_shared/response.ts'
+import { StatusCodes } from "std/http/status.ts";
+import { TOTAL_CELLS } from "@pck/shared";
+import { corsHeaders } from "../_shared/errors.ts";
 
-serve(() => {
-  return json({ ok: true, gridSize: GRID_SIZE })
-})
+type HealthResponse = {
+  status: "ok";
+  timestamp: string;
+  totalCells: number;
+};
+
+Deno.serve((_request: Request): Response => {
+  const body: HealthResponse = {
+    status: "ok",
+    timestamp: new Date().toISOString(),
+    totalCells: TOTAL_CELLS,
+  };
+
+  return new Response(JSON.stringify(body), {
+    status: StatusCodes.OK,
+    headers: corsHeaders,
+  });
+});
