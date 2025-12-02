@@ -44,8 +44,9 @@ const NavBar: React.FC = () => {
 						<button
 							onClick={() => setShowHowTo(true)}
 							className="nes-btn is-warning"
+							title="How To Play"
 						>
-							How To Play
+							<span className="text-xl">?</span>
 						</button>
 						<div className="all-[initial]">
 							<ConnectButton />

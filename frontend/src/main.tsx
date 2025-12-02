@@ -14,10 +14,37 @@ if (!privyAppId) {
   throw new Error("VITE_PRIVY_APP_ID is required to initialize PrivyProvider");
 }
 
+const rpcUrl = import.meta.env.VITE_RPC_URL;
+const chainId = Number(import.meta.env.VITE_CHAIN_ID);
+
+const customChain = {
+  id: chainId || 43522,
+  name: 'MemeCore',
+  network: 'memecore',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'Meme',
+    symbol: 'M',
+  },
+  rpcUrls: {
+    default: {
+      http: [rpcUrl || 'https://rpc.insectarium.memecore.net'],
+    },
+    public: {
+      http: [rpcUrl || 'https://rpc.insectarium.memecore.net'],
+    },
+  },
+} as any;
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <PrivyProvider appId={privyAppId}>
+      <PrivyProvider
+        appId={privyAppId}
+        config={{
+          supportedChains: [customChain],
+        }}
+      >
         <ThemeProvider>
           <App />
         </ThemeProvider>
