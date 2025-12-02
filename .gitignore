@@ -1,0 +1,7 @@
+*/build/*
+.trace
+.coverage*
+.claude
+node_modules
+
+.env

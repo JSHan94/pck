@@ -1,0 +1,147 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==========================================
+   MODERN CASUAL GAME DESIGN SYSTEM
+   ========================================== */
+
+/* CSS Variables - Brand Purple & Yellow Theme */
+:root {
+  /* Primary Brand Colors */
+  --color-primary: #ffd569;
+  /* Yellow */
+  --color-secondary: #cbbbfb;
+  /* Light Purple */
+  --color-tertiary: #2c2058;
+  /* Dark Purple */
+  --color-quaternary: #9f7aea;
+  /* Medium Purple */
+
+  /* Background Colors - Light Purple Theme */
+  --bg-light: #cbbbfb;
+  /* Brand Light Purple */
+  --bg-light-secondary: #d5c7fc;
+  /* Lighter Purple */
+  --bg-card-light: rgba(255, 255, 255, 0.7);
+  /* White cards with transparency */
+  --bg-card-hover: rgba(255, 255, 255, 0.85);
+
+  /* Text Colors */
+  --text-primary-light: #2c2058;
+  /* Dark Purple for text */
+  --text-secondary-light: #3d3456;
+  /* Darker Medium Purple for better visibility */
+  --text-tertiary-light: #4a4163;
+  /* Darker tertiary text for better contrast */
+  --text-muted-light: #5d547a;
+  /* Muted text with better visibility */
+
+  /* Accent Colors */
+  --accent-yellow: #ffd569;
+  /* Bright Yellow */
+  --accent-purple: #9f7aea;
+  /* Medium Purple */
+  --accent-dark: #2c2058;
+  /* Dark Purple */
+  --accent-green: hsl(145, 65%, 50%);
+  --accent-orange: hsl(25, 90%, 60%);
+  --accent-red: hsl(0, 75%, 60%);
+
+  /* Gradients - Vibrant Brand Colors */
+  --gradient-primary: linear-gradient(135deg, #ffd569 0%, #ffb347 100%);
+  --gradient-secondary: linear-gradient(135deg, #cbbbfb 0%, #9f7aea 100%);
+  --gradient-tertiary: linear-gradient(135deg, #2c2058 0%, #5d547a 100%);
+  --gradient-success: linear-gradient(135deg, hsl(145, 65%, 50%) 0%, hsl(165, 70%, 45%) 100%);
+  --gradient-warning: linear-gradient(135deg, #ffd569 0%, #ffb347 100%);
+  --gradient-danger: linear-gradient(135deg, hsl(0, 75%, 60%) 0%, hsl(0, 65%, 50%) 100%);
+  --gradient-brand: linear-gradient(135deg, #ffd569 0%, #cbbbfb 50%, #2c2058 100%);
+
+  /* Shadows - Soft and Colorful */
+  --shadow-sm: 0 2px 8px rgba(44, 32, 88, 0.15);
+  --shadow-md: 0 4px 16px rgba(44, 32, 88, 0.2);
+  --shadow-lg: 0 8px 32px rgba(44, 32, 88, 0.25);
+  --shadow-glow-yellow: 0 0 20px rgba(255, 213, 105, 0.4), 0 0 40px rgba(255, 213, 105, 0.2);
+  --shadow-glow-purple: 0 0 20px rgba(159, 122, 234, 0.4), 0 0 40px rgba(159, 122, 234, 0.2);
+
+  /* Glass Effect - Light Glass */
+  --glass-bg: rgba(255, 255, 255, 0.3);
+  --glass-border: rgba(44, 32, 88, 0.2);
+  --glass-border-yellow: rgba(255, 213, 105, 0.3);
+
+  /* Border Colors */
+  --border-primary: rgba(255, 213, 105, 0.4);
+  --border-secondary: rgba(159, 122, 234, 0.4);
+  --border-tertiary: rgba(44, 32, 88, 0.3);
+  --border-subtle: rgba(44, 32, 88, 0.15);
+}
+
+/* ==========================================
+   BASE STYLES
+   ========================================== */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+  background: var(--bg-light);
+  color: var(--text-primary-light);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* Headings */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.title,
+.nes-btn,
+.nes-badge {
+  font-family: 'Press Start 2P', cursive;
+  font-weight: 400;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+/* ==========================================
+   PIXEL UTILITIES
+   ========================================== */
+
+/* ==========================================
+   PIXEL UTILITIES
+   ========================================== */
+
+.glass,
+.glass-strong,
+.glass-yellow {
+  background: white;
+  border: 4px solid #000;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+/* ==========================================
+   UTILITY CLASSES
+   ========================================== */
+
+.text-gradient {
+  color: var(--color-primary);
+}
+
+.text-gradient-pink {
+  color: var(--color-secondary);
+}
+
+/* Focus states */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 4px solid var(--color-primary);
+  outline-offset: -4px;
+}

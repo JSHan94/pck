@@ -1,0 +1,15 @@
+{
+  "hash": "cf3792dc",
+  "configHash": "6aeeb7fb",
+  "lockfileHash": "e3b0c442",
+  "browserHash": "4bb4c241",
+  "optimized": {
+    "react-grab": {
+      "src": "../../frontend/node_modules/react-grab/dist/index.js",
+      "file": "react-grab.js",
+      "fileHash": "cf44e26c",
+      "needsInterop": false
+    }
+  },
+  "chunks": {}
+}
