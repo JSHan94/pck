@@ -107,11 +107,17 @@ export const createLottery = (creator: string, prize: number, fee: number) => {
 	return toSummary(record)
 }
 
+import { addPm, deductPm } from "./vaultMock"
+
 export const pickSlot = (id: string, slotIndex: number, player: string) => {
 	const rec = lotteries.get(id)
 	if (!rec) throw new Error("Lottery not found")
 	if (slotIndex < 0 || slotIndex >= rec.slots.length) throw new Error("Invalid slot")
 	if (rec.slots[slotIndex]) throw new Error("Slot already taken")
+
+	// Deduct fee from user's pM balance
+	const feeAmount = Number(mistToSui(rec.fee))
+	deductPm(feeAmount)
 
 	rec.slots[slotIndex] = true
 	rec.remainingFee = Math.max(rec.remainingFee - rec.fee, 0)
@@ -125,6 +131,12 @@ export const collectFee = (id: string, collector: string) => {
 	const rec = lotteries.get(id)
 	if (!rec) throw new Error("Lottery not found")
 	if (collector !== rec.creator) throw new Error("Only creator can collect fee")
+
+	const collectedAmount = Number(mistToSui(rec.remainingFee))
+	if (collectedAmount > 0) {
+		addPm(collectedAmount)
+	}
+
 	rec.remainingFee = 0
 	return toSummary(rec)
 }
@@ -133,6 +145,12 @@ export const collectPrize = (id: string, winner: string) => {
 	const rec = lotteries.get(id)
 	if (!rec) throw new Error("Lottery not found")
 	if (rec.winner !== winner) throw new Error("Only winner can collect prize")
+
+	const prizeAmount = Number(mistToSui(rec.prize))
+	if (prizeAmount > 0) {
+		addPm(prizeAmount)
+	}
+
 	rec.prize = 0
 	rec.prizeClaimed = true
 	return toSummary(rec)

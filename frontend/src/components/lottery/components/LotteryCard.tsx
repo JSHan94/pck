@@ -12,17 +12,17 @@ const LotteryCard: FC<Props> = ({ game, onSelect }) => {
 
 	const slots = game.slots.length ? game.slots : Array(9).fill(false)
 	const availableSlots = slots.filter((slot) => !slot).length
-	const title = `Lottery ${game.id.slice(0, 6)}...`
+	const title = `Play ${game.id.slice(0, 6)}...`
 	const description = isActive
-		? `${availableSlots} slots open • Prize ${game.prize} $M`
-		: `Ended • Prize ${game.prize} $M`
+		? `${availableSlots} slots open • Prize ${game.prize} $pM`
+		: `Ended • Prize ${game.prize} $pM`
 
 	return (
 		<button
 			type="button"
 			onClick={() => onSelect(game.id)}
 			className={`nes-container is-rounded with-title is-centered w-full hover:is-dark transition-all ${isActive ? "" : "is-disabled"}`}
-			aria-label={`${title} lottery ${statusLabel}`}
+			aria-label={`${title} play ${statusLabel}`}
 			aria-disabled={!isActive}
 		>
 			<p className="title">{title}</p>
@@ -68,7 +68,7 @@ const LotteryCard: FC<Props> = ({ game, onSelect }) => {
 			<div className="mt-3 text-left">
 				<p className="text-sm">{description}</p>
 				<div className="flex items-center gap-2 text-xs mt-2">
-					<span>💰 {game.prize} $M</span>
+					<span>💰 {game.prize} $pM</span>
 				</div>
 			</div>
 		</button>

@@ -1,7 +1,7 @@
 import { FC, useState, useEffect, useCallback } from "react"
 import { useCurrentAccount } from "../../lib/wallet"
 import { mistToSui } from "../../config/constants"
-import { useSecret } from "./components/SecretManagement"
+
 import { LotteryPlay } from "./components/LotteryPlay"
 import { LotteryGrid } from "./components/LotteryGrid"
 import { fetchAllLotteries as fetchLotteriesLive, fetchLotteryDetail } from "./lotteryApi"
@@ -20,7 +20,7 @@ interface LotteryData {
 
 const LotteryInteraction: FC = () => {
 	const currentAccount = useCurrentAccount()
-	const { claimSecretHash } = useSecret(currentAccount?.address)
+
 
 	const [lotteryObjectId, setLotteryObjectId] = useState<string>("")
 	const [slotIndex, setSlotIndex] = useState<number | null>(null)
@@ -44,7 +44,7 @@ const LotteryInteraction: FC = () => {
 		if (!lotteryObjectId) return
 
 		setIsLoading(true)
-		setStatus("Querying lottery...")
+		setStatus("Querying play...")
 
 		try {
 			const object = await fetchLotteryDetail(lotteryObjectId)
@@ -55,19 +55,17 @@ const LotteryInteraction: FC = () => {
 				const slots = object.slots || []
 				const winner = object.winner
 
-				setStatus(`Lottery Status:
+				setStatus(`Play Status:
   Active: ${object.isActive}
-  Prize: ${mistToSui(object.prizeMist)} $M${
-					object.prizeClaimed
+  Prize: ${mistToSui(object.prizeMist)} $pM${object.prizeClaimed
 						? " (Claimed Anonymously ✓)"
 						: object.prizeMist === 0
-						? " (Collected ✓)"
-						: ""
-				}
-  Entry Fee: ${mistToSui(object.feeMist)} $M per slot
-  Remaining Fee: ${mistToSui(object.remainingFeeMist)} $M${
-					object.remainingFeeMist === 0 && winner ? " (Collected ✓)" : ""
-				}
+							? " (Collected ✓)"
+							: ""
+					}
+  Entry Fee: ${mistToSui(object.feeMist)} $pM per slot
+  Remaining Fee: ${mistToSui(object.remainingFeeMist)} $pM${object.remainingFeeMist === 0 && winner ? " (Collected ✓)" : ""
+					}
   Taken Slots: ${slots.filter((s: boolean) => s).length}/${slots.length}
   ${winner ? `Winner: ${winner}` : "No winner yet"}
   ${object.prizeClaimed ? "Prize has been claimed anonymously" : ""}`)
@@ -83,7 +81,7 @@ const LotteryInteraction: FC = () => {
 					fee: object.feeMist,
 				})
 			} else {
-				setStatus("Could not read lottery data")
+				setStatus("Could not read play data")
 			}
 
 			setIsLoading(false)
@@ -122,11 +120,11 @@ const LotteryInteraction: FC = () => {
 				setLotteryObjectId(validLotteries[0].id)
 			}
 
-			setStatus(`Loaded ${validLotteries.length} lottery object(s) from mock data`)
+			setStatus(`Loaded ${validLotteries.length} play object(s) from mock data`)
 		} catch (error: any) {
 			console.error("Error fetching lotteries:", error)
 			setStatus(
-				`Error fetching lotteries: ${error.message}. Make sure you've created at least one lottery.`
+				`Error fetching plays: ${error.message}. Make sure you've created at least one play.`
 			)
 		}
 		setIsLoadingLotteries(false)
@@ -134,12 +132,12 @@ const LotteryInteraction: FC = () => {
 
 	return (
 		<div className="max-w-4xl mx-auto p-6">
-			<h2 className="text-3xl font-bold mb-8">$M Random Lottery</h2>
+			<h2 className="text-3xl font-bold mb-8">$pM Random Play</h2>
 
-			Lottery Selection
+			Play Selection
 			<div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
 				<div className="flex items-center justify-between mb-2">
-					<label className="block text-sm font-medium">Select Lottery:</label>
+					<label className="block text-sm font-medium">Select Play:</label>
 					<button
 						onClick={fetchAllLotteries}
 						disabled={isLoadingLotteries}
@@ -153,7 +151,7 @@ const LotteryInteraction: FC = () => {
 					onChange={(e) => setLotteryObjectId(e.target.value)}
 					className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
 				>
-					<option value="">Select a lottery...</option>
+					<option value="">Select a play...</option>
 					{lotteryObjects.map((lottery) => (
 						<option key={lottery.id} value={lottery.id}>
 							{lottery.id.slice(0, 10)}...{lottery.id.slice(-8)} -{" "}
@@ -164,7 +162,7 @@ const LotteryInteraction: FC = () => {
 				</select>
 				{lotteryObjects.length === 0 && (
 					<p className="text-xs text-gray-500 mt-1">
-						No lotteries found. Click "Refresh List" or create a new lottery.
+						No plays found. Click "Refresh List" or create a new play.
 					</p>
 				)}
 			</div>
@@ -187,7 +185,7 @@ const LotteryInteraction: FC = () => {
 					lotteryData={lotteryData}
 					slotIndex={slotIndex}
 					currentAccountAddress={currentAccount?.address}
-					claimSecretHash={claimSecretHash}
+
 					isLoading={isLoading}
 					onLoadingChange={setIsLoading}
 					onStatusChange={setStatus}
@@ -210,36 +208,26 @@ const LotteryInteraction: FC = () => {
 				<h4 className="font-semibold mb-2">How to Play:</h4>
 				<ol className="list-decimal list-inside space-y-1 text-sm">
 					<li>Connect your wallet using the navbar</li>
+
 					<li>
-						<strong>One-time setup:</strong> In the "My Secret" section,
-						click "Generate Secret" to create your personal claim secret.
-						This secret is saved in your browser's local storage and used for
-						all your lottery picks.
-					</li>
-					<li>
-						<strong>Creating a lottery:</strong> Click "Create Lottery" and
+						<strong>Creating a play:</strong> Click "Create Play" and
 						configure the prize pool and entry fee. The prize pool you set
-						will be locked in the lottery contract.
+						will be locked in the play contract.
 					</li>
 					<li>
-						<strong>Playing:</strong> Select an existing lottery from the
+						<strong>Playing:</strong> Select an existing play from the
 						dropdown, click any available slot in the 3x3 grid, then "Pick
-						Slot". The entry fee per lottery is shown in the lottery details.
-						Your secret hash is automatically included with each pick.
+						Slot". The entry fee per play is shown in the play details.
 					</li>
 					<li>
-						<strong>Winning:</strong> If you win, your slot turns gold! You
-						already have your secret, so you can immediately claim
-						anonymously.
+						<strong>Winning:</strong> If you win, your slot turns gold!
 					</li>
 					<li>
-						<strong>Claiming prizes:</strong> Winners can either (a) collect
-						directly as the known winner using "Collect Prize", or (b) use
-						their secret to collect anonymously from any wallet address via
-						"Claim Anonymously".
+						<strong>Claiming prizes:</strong> Winners can collect
+						directly as the known winner using "Collect Prize".
 					</li>
 					<li>
-						<strong>Creator fees:</strong> If you created the lottery, click
+						<strong>Creator fees:</strong> If you created the play, click
 						"Collect Fee" to get accumulated player fees.
 					</li>
 				</ol>

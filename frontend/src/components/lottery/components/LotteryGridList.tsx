@@ -59,37 +59,34 @@ const LotteryGridList: FC = () => {
 
 	return (
 		<section className="nes-container with-title is-centered">
-			<h3 className="title">Active Lotteries</h3>
+			<h3 className="title">Active Plays</h3>
 			{/* Header Section */}
 			<div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
 				<div>
 					<p className="text-sm">
-						Showing {Math.min(games.length, PAGE_SIZE)} of {total} games
+						Showing {Math.min(games.length, PAGE_SIZE)} of {total} plays
 					</p>
 				</div>
 
-				<div className="flex flex-col gap-3 items-start md:items-end md:flex-row md:gap-3">
+				<div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center">
 					{/* Refresh Button */}
-					{/* Refresh Button */}
-					<div className="flex items-center gap-2">
-						<button
-							type="button"
-							onClick={() => loadPage(page)}
-							disabled={isLoading}
-							className={`nes-btn is-primary ${isLoading ? "is-disabled" : ""}`}
-							aria-label="Refresh lotteries"
-						>
-							Refresh
-						</button>
-					</div>
+					<button
+						type="button"
+						onClick={() => loadPage(page)}
+						disabled={isLoading}
+						className={`nes-btn is-primary h-12 flex items-center justify-center ${isLoading ? "is-disabled" : ""}`}
+						aria-label="Refresh plays"
+					>
+						Refresh
+					</button>
 
-					{/* Filter Dropdown */}
 					{/* Filter Dropdown */}
 					<div className="nes-select">
 						<select
 							required
 							value={filterMode}
 							onChange={(e) => setFilterMode(e.target.value as FilterMode)}
+							className="h-12 !min-h-0"
 						>
 							<option value="latest">Active first • Newest</option>
 							<option value="active">Active only</option>
@@ -98,13 +95,12 @@ const LotteryGridList: FC = () => {
 					</div>
 
 					{/* Create Button */}
-					{/* Create Button */}
 					<button
 						type="button"
 						onClick={handleCreateClick}
-						className="nes-btn is-success"
+						className="nes-btn is-success h-12 flex items-center justify-center"
 					>
-						+ Create
+						Create
 					</button>
 				</div>
 			</div>
@@ -156,7 +152,7 @@ const LotteryGridList: FC = () => {
 					className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4 animate-slide-up"
 					role="dialog"
 					aria-modal="true"
-					aria-label="Create new lottery"
+					aria-label="Create new play"
 					onClick={() => setShowCreateModal(false)}
 				>
 					<div
@@ -167,7 +163,7 @@ const LotteryGridList: FC = () => {
 							type="button"
 							onClick={() => setShowCreateModal(false)}
 							className="absolute top-4 right-4 text-2xl text-brand-tertiary hover:text-brand-primary dark:text-gray-300 dark:hover:text-gray-100 transition-colors"
-							aria-label="Close create lottery modal"
+							aria-label="Close create play modal"
 						>
 							✕
 						</button>

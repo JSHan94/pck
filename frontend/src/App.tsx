@@ -1,8 +1,9 @@
 import { useNavigation } from "./providers/navigation/NavigationContext";
 import NavBar from "./components/shared/Navbar";
 import { NavigationProvider } from "./providers/navigation/NavigationProvider";
-import WalletView from "./views/WalletView";
+
 import HomeView from "./views/HomeView";
+import VaultView from "./views/VaultView";
 import LotteryDetailPage from "./components/lottery/components/LotteryDetailPage";
 
 const Pages: React.FC = () => {
@@ -12,8 +13,10 @@ const Pages: React.FC = () => {
     return <HomeView />;
   }
 
-  if (currentPage === "/wallet") {
-    return <WalletView />;
+
+
+  if (currentPage === "/vault") {
+    return <VaultView />;
   }
 
   if (currentPage.startsWith("/lottery/")) {

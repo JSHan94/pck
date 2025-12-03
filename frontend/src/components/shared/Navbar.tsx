@@ -30,12 +30,13 @@ const NavBar: React.FC = () => {
 							</li>
 							<li>
 								<button
-									onClick={() => navigate("/wallet")}
-									className={`nes-btn ${currentPage === "/wallet" ? "is-primary" : ""}`}
+									onClick={() => navigate("/vault")}
+									className={`nes-btn ${currentPage === "/vault" ? "is-primary" : ""}`}
 								>
-									Wallet
+									Vault
 								</button>
 							</li>
+
 						</ul>
 					</div>
 
@@ -82,7 +83,7 @@ const NavBar: React.FC = () => {
 							<ul className="nes-list is-disc">
 								<li>Connect Wallet</li>
 								<li>Generate Secret</li>
-								<li>Choose Lottery</li>
+								<li>Choose Play</li>
 								<li>Pick a Slot</li>
 								<li>Win & Claim</li>
 							</ul>

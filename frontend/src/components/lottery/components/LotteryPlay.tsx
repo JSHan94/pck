@@ -1,8 +1,8 @@
-import { FC, useState, useEffect } from "react"
+import { FC } from "react"
 import { useCurrentAccount } from "../../../lib/wallet"
 import { mistToSui } from "../../../config/constants"
 import {
-	claimPrizeWithSecretMock,
+
 	collectFeeMock,
 	collectPrizeMock,
 	pickSlotMock,
@@ -25,7 +25,7 @@ interface LotteryPlayProps {
 	lotteryData: LotteryData | null
 	slotIndex: number | null
 	currentAccountAddress: string | undefined
-	claimSecretHash: string
+
 	isLoading: boolean
 	onLoadingChange: (loading: boolean) => void
 	onStatusChange: (status: string) => void
@@ -37,33 +37,20 @@ export const LotteryPlay: FC<LotteryPlayProps> = ({
 	lotteryData,
 	slotIndex,
 	currentAccountAddress,
-	claimSecretHash,
+
 	isLoading,
 	onLoadingChange,
 	onStatusChange,
 	onLotteryUpdate,
 }) => {
 	const currentAccount = useCurrentAccount()
-	const [claimSecret, setClaimSecret] = useState<string>("")
 
-	// Auto-populate claim secret from localStorage
-	useEffect(() => {
-		const savedSecret = localStorage.getItem("lotterySecret")
-		if (savedSecret && !claimSecret) {
-			setClaimSecret(savedSecret)
-		}
-	}, [claimSecret])
 
 	const handlePickSlot = async () => {
 		if (!lotteryObjectId || isLoading || slotIndex === null || !lotteryData)
 			return
 
-		if (!claimSecretHash) {
-			onStatusChange(
-				"Please generate or fetch your secret first in the 'My Secret' section above!"
-			)
-			return
-		}
+
 
 		onLoadingChange(true)
 		onStatusChange("Picking slot...")
@@ -116,26 +103,7 @@ export const LotteryPlay: FC<LotteryPlayProps> = ({
 		}
 	}
 
-	const handleClaimPrizeWithSecret = async () => {
-		if (!lotteryObjectId || isLoading || !claimSecret) {
-			onStatusChange("Please provide the claim secret")
-			return
-		}
 
-		onLoadingChange(true)
-		onStatusChange("Claiming prize anonymously...")
-
-		try {
-			claimPrizeWithSecretMock(lotteryObjectId)
-			onStatusChange("Prize claimed anonymously.")
-			setClaimSecret("")
-			setTimeout(() => onLotteryUpdate(), 500)
-		} catch (error: any) {
-			console.error("Error claiming prize:", error)
-			onStatusChange(`Error: ${error.message}`)
-			onLoadingChange(false)
-		}
-	}
 
 	const isCreator =
 		currentAccountAddress &&
@@ -159,7 +127,7 @@ export const LotteryPlay: FC<LotteryPlayProps> = ({
 						<div className="grid grid-cols-2 gap-2 text-sm">
 							<div>
 								<span className="font-semibold">Prize:</span>{" "}
-								{mistToSui(lotteryData.prize)} $M
+								{mistToSui(lotteryData.prize)} $pM
 								{lotteryData.prize === 0 && (
 									<span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
 										(Collected ✓)
@@ -168,11 +136,11 @@ export const LotteryPlay: FC<LotteryPlayProps> = ({
 							</div>
 							<div>
 								<span className="font-semibold">Entry Fee:</span>{" "}
-								{mistToSui(lotteryData.fee)} $M
+								{mistToSui(lotteryData.fee)} $pM
 							</div>
 							<div>
 								<span className="font-semibold">Fees Collected:</span>{" "}
-								{mistToSui(lotteryData.remainingFee)} $M
+								{mistToSui(lotteryData.remainingFee)} $pM
 								{lotteryData.remainingFee === 0 && lotteryData.winner && (
 									<span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
 										(Collected ✓)
@@ -210,25 +178,25 @@ export const LotteryPlay: FC<LotteryPlayProps> = ({
 						!lotteryData
 							? "Select a lottery first"
 							: !lotteryData.isActive
-							? "This lottery has ended"
-							: slotIndex === null
-							? "Select a slot from the grid"
-							: slotIndex !== null && lotteryData.slots[slotIndex]
-							? "This slot is already taken"
-							: "Click to pick this slot"
+								? "This lottery has ended"
+								: slotIndex === null
+									? "Select a slot from the grid"
+									: slotIndex !== null && lotteryData.slots[slotIndex]
+										? "This slot is already taken"
+										: "Click to pick this slot"
 					}
 				>
 					{isLoading
 						? "Processing..."
 						: !lotteryData
-						? "Pick Slot"
-						: !lotteryData.isActive
-						? "Lottery Ended"
-						: slotIndex === null
-						? "Pick Slot (Select from Grid)"
-						: lotteryData.slots[slotIndex]
-						? "Slot Taken"
-						: `Pick Slot ${slotIndex} (Pay ${mistToSui(lotteryData.fee)} $M)`}
+							? "Pick Slot"
+							: !lotteryData.isActive
+								? "Lottery Ended"
+								: slotIndex === null
+									? "Pick Slot (Select from Grid)"
+									: lotteryData.slots[slotIndex]
+										? "Slot Taken"
+										: `Pick Slot ${slotIndex} (Pay ${mistToSui(lotteryData.fee)} $pM)`}
 				</button>
 
 				<div className="flex gap-3">
@@ -240,19 +208,19 @@ export const LotteryPlay: FC<LotteryPlayProps> = ({
 							!isCreator
 								? "Only creator can collect fees"
 								: !lotteryData?.remainingFee
-								? "No fees to collect"
-								: "Collect accumulated fees"
+									? "No fees to collect"
+									: "Collect accumulated fees"
 						}
 					>
 						{isLoading
 							? "Processing..."
 							: canCollectFee
-							? `Collect Fee (${mistToSui(lotteryData!.remainingFee)} $M)`
-							: isCreator &&
-							  lotteryData?.remainingFee === 0 &&
-							  lotteryData?.winner
-							? "Fees Collected ✓"
-							: "Collect Fee"}
+								? `Collect Fee (${mistToSui(lotteryData!.remainingFee)} $pM)`
+								: isCreator &&
+									lotteryData?.remainingFee === 0 &&
+									lotteryData?.winner
+									? "Fees Collected ✓"
+									: "Collect Fee"}
 					</button>
 
 					<button
@@ -263,57 +231,21 @@ export const LotteryPlay: FC<LotteryPlayProps> = ({
 							!isWinner
 								? "Only winner can collect prize"
 								: !lotteryData?.prize
-								? "Prize already collected"
-								: "Collect your prize!"
+									? "Prize already collected"
+									: "Collect your prize!"
 						}
 					>
 						{isLoading
 							? "Processing..."
 							: canCollectPrize
-							? `Collect Prize (${mistToSui(lotteryData!.prize)} $M)`
-							: isWinner && lotteryData?.prize === 0
-							? "Prize Collected ✓"
-							: "Collect Prize"}
+								? `Collect Prize (${mistToSui(lotteryData!.prize)} $pM)`
+								: isWinner && lotteryData?.prize === 0
+									? "Prize Collected ✓"
+									: "Collect Prize"}
 					</button>
 				</div>
 
-				{/* Anonymous Claim Section */}
-				<div className="border-t dark:border-gray-700 pt-4 mt-4">
-					<h4 className="text-lg font-semibold mb-3">Anonymous Prize Claim</h4>
-					<p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
-						If you have the claim secret, you can collect the prize
-						anonymously from any wallet.
-					</p>
-					<div className="flex gap-2">
-						<input
-							type="text"
-							value={claimSecret}
-							onChange={(e) => setClaimSecret(e.target.value)}
-							placeholder="Enter claim secret (hex)"
-							className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 font-mono text-sm"
-						/>
-						<button
-							onClick={handleClaimPrizeWithSecret}
-							disabled={
-								isLoading || !claimSecret || lotteryData?.prizeClaimed
-							}
-							className="px-6 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
-							title={
-								lotteryData?.prizeClaimed
-									? "Prize already claimed"
-									: !claimSecret
-									? "Enter claim secret"
-									: "Claim prize anonymously"
-							}
-						>
-							{isLoading
-								? "Processing..."
-								: lotteryData?.prizeClaimed
-								? "Claimed ✓"
-								: "Claim Anonymously"}
-						</button>
-					</div>
-				</div>
+
 			</div>
 		</div>
 	)

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react"
 import { usePrivy, useWallets } from "@privy-io/react-auth"
 import { ensureChainId, rpcRequest } from "./rpcClient"
+import { getVaultState, BALANCE_UPDATED_EVENT } from "../mocks/vaultMock"
 import memeLogo from "../assets/meme_logo.png"
 
 type Account = { address: string }
@@ -68,6 +69,7 @@ export const ConnectButton: React.FC = () => {
 	const { wallets } = useWallets()
 	const { connect, disconnect } = usePrivyWalletActions()
 	const [balance, setBalance] = useState<string | null>(null)
+	const [pmBalance, setPmBalance] = useState<number | null>(null)
 
 	const connected = Boolean(account)
 	const activeWallet = wallets.find((w) => w.address === account?.address)
@@ -80,6 +82,12 @@ export const ConnectButton: React.FC = () => {
 	const isWrongChain = connected && walletChainId !== null && walletChainId !== expectedChainId
 
 	useEffect(() => {
+		const fetchPmBalance = () => {
+			getVaultState().then(state => {
+				setPmBalance(state.userPmBalance)
+			})
+		}
+
 		if (account?.address) {
 			rpcRequest<string>("eth_getBalance", [account.address, "latest"])
 				.then((hex) => {
@@ -90,8 +98,19 @@ export const ConnectButton: React.FC = () => {
 					console.error("Failed to fetch balance:", err)
 					setBalance(null)
 				})
+
+			// Initial fetch
+			fetchPmBalance()
+
+			// Listen for updates
+			window.addEventListener(BALANCE_UPDATED_EVENT, fetchPmBalance)
 		} else {
 			setBalance(null)
+			setPmBalance(null)
+		}
+
+		return () => {
+			window.removeEventListener(BALANCE_UPDATED_EVENT, fetchPmBalance)
 		}
 	}, [account?.address])
 
@@ -102,10 +121,18 @@ export const ConnectButton: React.FC = () => {
 	return (
 		<div className="flex items-center gap-4">
 			{connected && balance && !isWrongChain && (
-				<button className="nes-btn is-disabled" style={{ opacity: 1, cursor: 'default', display: 'flex', alignItems: 'center', gap: '10px', paddingLeft: '1rem', paddingRight: '1rem' }}>
-					<img src={memeLogo} alt="$M" className="w-6 h-6 object-contain pixelated" />
-					<span className="text-black">{balance}</span>
-				</button>
+				<div className="flex gap-2">
+					<button className="nes-btn is-disabled" style={{ opacity: 1, cursor: 'default', display: 'flex', alignItems: 'center', gap: '10px', paddingLeft: '1rem', paddingRight: '1rem' }}>
+						<img src={memeLogo} alt="$M" className="w-6 h-6 object-contain pixelated" />
+						<span className="text-black">{balance}</span>
+					</button>
+					{pmBalance !== null && (
+						<button className="nes-btn is-disabled" style={{ opacity: 1, cursor: 'default', display: 'flex', alignItems: 'center', gap: '10px', paddingLeft: '1rem', paddingRight: '1rem' }}>
+							<span className="text-black font-bold">$pM</span>
+							<span className="text-black">{pmBalance}</span>
+						</button>
+					)}
+				</div>
 			)}
 			<button
 				type="button"
