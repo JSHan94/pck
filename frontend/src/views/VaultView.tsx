@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { getVaultState, lockAndMint, burnAndWithdraw, VaultState } from "../mocks/vaultMock";
+import { useWallets } from "@privy-io/react-auth";
+import { useCurrentAccount } from "../lib/wallet";
 
 const VaultView: React.FC = () => {
     const [state, setState] = useState<VaultState>({ lockedM: 0, userPmBalance: 0 });
+    const { wallets } = useWallets();
+    const account = useCurrentAccount();
     const [isLoading, setIsLoading] = useState(false);
     const [lockAmount, setLockAmount] = useState("");
     const [withdrawAmount, setWithdrawAmount] = useState("");
@@ -22,15 +26,40 @@ const VaultView: React.FC = () => {
             setStatusMessage("Please enter a valid amount");
             return;
         }
+
+        const activeWallet = wallets.find((w) => w.address === account?.address);
+        if (!activeWallet) {
+            setStatusMessage("Please connect your wallet first");
+            return;
+        }
+
         setIsLoading(true);
-        setStatusMessage("Locking $M and minting $pM...");
+        setStatusMessage("Sending transaction to burn address...");
         try {
+            // 1. Send transaction to 0x1
+            const amountWei = "0x" + BigInt(Math.floor(Number(lockAmount) * 1e18)).toString(16);
+            const provider = await activeWallet.getEthereumProvider();
+
+            setStatusMessage("Please confirm the transaction in your wallet...");
+
+            await provider.request({
+                method: "eth_sendTransaction",
+                params: [{
+                    from: account?.address,
+                    to: "0x0000000000000000000000000000000000000001",
+                    value: amountWei,
+                }]
+            });
+
+            setStatusMessage(`Transaction sent! Minting $pM...`);
+
             const newState = await lockAndMint(Number(lockAmount));
             setState(newState);
             setStatusMessage("Success! $pM minted.");
             setLockAmount("");
         } catch (error: any) {
-            setStatusMessage(`Error: ${error.message}`);
+            console.error(error);
+            setStatusMessage(`Error: ${error.message || "Transaction failed"}`);
         } finally {
             setIsLoading(false);
         }
@@ -134,11 +163,11 @@ const VaultView: React.FC = () => {
                 <div className="grid grid-cols-2 gap-4 text-center">
                     <div>
                         <p className="text-sm text-gray-500">Your $pM Balance</p>
-                        <p className="text-2xl text-primary">{state.userPmBalance}</p>
+                        <p className="text-2xl text-primary">{Math.max(0, state.userPmBalance).toFixed(4)}</p>
                     </div>
                     <div>
                         <p className="text-sm text-gray-500">Total Locked $M</p>
-                        <p className="text-2xl">{state.lockedM}</p>
+                        <p className="text-2xl">{Math.max(0, state.lockedM).toFixed(4)}</p>
                     </div>
                 </div>
             </div>

@@ -1,4 +1,5 @@
 import React, { useState } from "react"
+import memePlayLogo from "../../assets/memeplay_logo.png"
 import { useNavigation } from "../../providers/navigation/NavigationContext"
 import { ConnectButton } from "../../lib/wallet"
 
@@ -14,7 +15,7 @@ const NavBar: React.FC = () => {
 					{/* Logo & Navigation */}
 					<div className="flex items-center space-x-8">
 						<div className="flex items-center gap-2 hidden sm:flex">
-							<i className="nes-icon is-medium star"></i>
+							<img src={memePlayLogo} alt="MemePlay Logo" className="w-8 h-8 object-contain pixelated" />
 							<h1 className="text-2xl">
 								MemePlay
 							</h1>

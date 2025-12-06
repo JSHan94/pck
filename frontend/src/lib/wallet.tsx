@@ -82,35 +82,39 @@ export const ConnectButton: React.FC = () => {
 	const isWrongChain = connected && walletChainId !== null && walletChainId !== expectedChainId
 
 	useEffect(() => {
-		const fetchPmBalance = () => {
+		const fetchBalances = () => {
+			// Fetch PM Balance
 			getVaultState().then(state => {
 				setPmBalance(state.userPmBalance)
 			})
+
+			// Fetch Native Balance
+			if (account?.address) {
+				rpcRequest<string>("eth_getBalance", [account.address, "latest"])
+					.then((hex) => {
+						const val = Number(BigInt(hex)) / 1e18
+						setBalance(val.toFixed(2))
+					})
+					.catch((err) => {
+						console.error("Failed to fetch balance:", err)
+						setBalance(null)
+					})
+			}
 		}
 
 		if (account?.address) {
-			rpcRequest<string>("eth_getBalance", [account.address, "latest"])
-				.then((hex) => {
-					const val = Number(BigInt(hex)) / 1e18
-					setBalance(val.toFixed(2))
-				})
-				.catch((err) => {
-					console.error("Failed to fetch balance:", err)
-					setBalance(null)
-				})
-
 			// Initial fetch
-			fetchPmBalance()
+			fetchBalances()
 
 			// Listen for updates
-			window.addEventListener(BALANCE_UPDATED_EVENT, fetchPmBalance)
+			window.addEventListener(BALANCE_UPDATED_EVENT, fetchBalances)
 		} else {
 			setBalance(null)
 			setPmBalance(null)
 		}
 
 		return () => {
-			window.removeEventListener(BALANCE_UPDATED_EVENT, fetchPmBalance)
+			window.removeEventListener(BALANCE_UPDATED_EVENT, fetchBalances)
 		}
 	}, [account?.address])
 
